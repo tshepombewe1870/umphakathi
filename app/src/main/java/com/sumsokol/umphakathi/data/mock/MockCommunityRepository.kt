@@ -13,6 +13,8 @@ class MockCommunityRepository : CommunityRepository {
     private val _communities = MutableStateFlow(sampleCommunities())
     private val _posts = MutableStateFlow(samplePosts())
     private val _comments = MutableStateFlow(sampleComments())
+    private val _notices = MutableStateFlow(sampleNotices())
+    private val _memberships = MutableStateFlow<Map<String, Set<String>>>(emptyMap()) // communityId -> set of userIds
 
     override fun getCommunities(): Flow<List<Community>> = _communities
 
@@ -179,6 +181,77 @@ class MockCommunityRepository : CommunityRepository {
             authorId = "user-666",
             body = "I have a bakkie and can help - how do I sign up?",
             createdAt = Instant.now().minus(5, ChronoUnit.HOURS)
+        )
+    )
+
+    override fun getNoticesForCommunity(communityId: String): Flow<List<Notice>> =
+        _notices.map { list -> list.filter { it.communityId == communityId } }
+
+    override suspend fun createNotice(notice: Notice): Result<Notice> {
+        val newNotice = notice.copy(id = UUID.randomUUID().toString(), createdAt = Instant.now())
+        _notices.value = _notices.value + newNotice
+        return Result.success(newNotice)
+    }
+
+    override suspend fun updateNoticeStatus(noticeId: String, status: NoticeStatus): Result<Unit> {
+        _notices.value = _notices.value.map {
+            if (it.id == noticeId) it.copy(status = status, updatedAt = Instant.now()) else it
+        }
+        return Result.success(Unit)
+    }
+
+    override suspend fun joinCommunity(communityId: String, userId: String): Result<Unit> {
+        val current = _memberships.value[communityId] ?: emptySet()
+        _memberships.value = _memberships.value + (communityId to (current + userId))
+        _communities.value = _communities.value.map {
+            if (it.id == communityId) it.copy(memberCount = it.memberCount + 1) else it
+        }
+        return Result.success(Unit)
+    }
+
+    override suspend fun leaveCommunity(communityId: String, userId: String): Result<Unit> {
+        val current = _memberships.value[communityId] ?: emptySet()
+        if (userId in current) {
+            _memberships.value = _memberships.value + (communityId to (current - userId))
+            _communities.value = _communities.value.map {
+                if (it.id == communityId) it.copy(memberCount = (it.memberCount - 1).coerceAtLeast(0)) else it
+            }
+        }
+        return Result.success(Unit)
+    }
+
+    override fun isUserMember(communityId: String, userId: String): Flow<Boolean> =
+        _memberships.map { memberships ->
+            memberships[communityId]?.contains(userId) == true
+        }
+
+    private fun sampleNotices() = listOf(
+        Notice(
+            id = "notice-001",
+            communityId = "community-001",
+            creatorId = "org-111",
+            creatorName = "City Power",
+            creatorType = "ORGANIZATION",
+            title = "Scheduled Maintenance Outage",
+            body = "Please note that there will be a scheduled electricity maintenance outage on Tuesday from 08:00 to 16:00 affecting Orlando West.",
+            type = NoticeType.PLANNED_OUTAGE,
+            status = NoticeStatus.APPROVED,
+            startTime = Instant.now().plus(1, ChronoUnit.DAYS),
+            endTime = Instant.now().plus(1, ChronoUnit.DAYS).plus(8, ChronoUnit.HOURS),
+            locationDescription = "Orlando West, Soweto"
+        ),
+        Notice(
+            id = "notice-002",
+            communityId = "community-001",
+            creatorId = "user-222",
+            creatorName = "Lerato M.",
+            creatorType = "PERSON",
+            title = "Soweto Community Clean-up",
+            body = "Let's gather at the community hall to clean up the local park and streets. Bags and gloves will be provided.",
+            type = NoticeType.COMMUNITY_EVENT,
+            status = NoticeStatus.APPROVED,
+            startTime = Instant.now().plus(2, ChronoUnit.DAYS),
+            locationDescription = "Community Hall Park"
         )
     )
 }

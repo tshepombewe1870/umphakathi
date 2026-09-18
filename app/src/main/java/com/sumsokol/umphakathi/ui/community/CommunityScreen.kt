@@ -19,11 +19,11 @@ import com.sumsokol.umphakathi.domain.model.Community
 import com.sumsokol.umphakathi.domain.model.CommunityType
 import com.sumsokol.umphakathi.ui.report.CommunityTypeBadge
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityScreen(
     searchQuery: String,
     onCommunityClick: (String) -> Unit,
+    onNewReport: (String) -> Unit,
     viewModel: CommunityViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -137,7 +137,14 @@ fun CommunityScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(filteredCommunities) { community ->
-                    CommunityCard(community = community, onClick = { onCommunityClick(community.id) })
+                    CommunityCard(
+                        community = community,
+                        isJoined = uiState.joinedCommunityIds.contains(community.id),
+                        onJoinClick = { viewModel.joinCommunity(community.id) },
+                        onLeaveClick = { viewModel.leaveCommunity(community.id) },
+                        onReportClick = { onNewReport(community.id) },
+                        onClick = { onCommunityClick(community.id) }
+                    )
                 }
             }
         }
@@ -145,7 +152,14 @@ fun CommunityScreen(
 }
 
 @Composable
-fun CommunityCard(community: Community, onClick: () -> Unit) {
+fun CommunityCard(
+    community: Community,
+    isJoined: Boolean,
+    onJoinClick: () -> Unit,
+    onLeaveClick: () -> Unit,
+    onReportClick: () -> Unit,
+    onClick: () -> Unit
+) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
@@ -161,10 +175,12 @@ fun CommunityCard(community: Community, onClick: () -> Unit) {
                     Spacer(Modifier.height(2.dp))
                     CommunityTypeBadge(type = community.type)
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.People, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.outline)
-                    Spacer(Modifier.width(2.dp))
-                    Text("${community.memberCount}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.People, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.outline)
+                        Spacer(Modifier.width(2.dp))
+                        Text("${community.memberCount}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
+                    }
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -181,6 +197,50 @@ fun CommunityCard(community: Community, onClick: () -> Unit) {
                     Icon(Icons.Default.LocationOn, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.outline)
                     Spacer(Modifier.width(2.dp))
                     Text(loc, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                }
+            }
+            
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isJoined) {
+                    OutlinedButton(
+                        onClick = onLeaveClick,
+                        modifier = Modifier.height(36.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.Check, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Joined", style = MaterialTheme.typography.labelMedium)
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = onReportClick,
+                        modifier = Modifier.height(36.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.Add, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Report", style = MaterialTheme.typography.labelMedium)
+                    }
+                } else {
+                    Button(
+                        onClick = onJoinClick,
+                        modifier = Modifier.height(36.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.PersonAdd, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Join", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+                Spacer(Modifier.width(8.dp))
+                IconButton(onClick = { /* Share */ }) {
+                    Icon(Icons.Default.Share, "Share", Modifier.size(20.dp))
                 }
             }
         }

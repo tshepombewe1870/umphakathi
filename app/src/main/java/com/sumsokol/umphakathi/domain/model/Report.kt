@@ -44,6 +44,7 @@ data class Report(
     val hasEvidence: Boolean = false,
     val imageUrls: List<String> = emptyList(),
     val meTooCount: Int = 0,
+    val likeCount: Int = 0,
     val commentCount: Int = 0,
     val volunteerCount: Int = 0,
     val shareCount: Int = 0,

@@ -13,6 +13,7 @@ import com.sumsokol.umphakathi.domain.model.CommunityType
 
 data class CommunityUiState(
     val communities: List<Community> = emptyList(),
+    val joinedCommunityIds: Set<String> = emptySet(),
     val isLoading: Boolean = true,
     val error: String? = null
 )
@@ -26,8 +27,28 @@ class CommunityViewModel : ViewModel() {
     init {
         viewModelScope.launch {
             communityRepository.getCommunities().collect { communities ->
-                _uiState.value = CommunityUiState(communities = communities, isLoading = false)
+                _uiState.value = _uiState.value.copy(communities = communities, isLoading = false)
             }
+        }
+    }
+
+    fun joinCommunity(communityId: String) {
+        val userId = FirebaseDataModule.currentUserId ?: return
+        viewModelScope.launch {
+            communityRepository.joinCommunity(communityId, userId)
+            _uiState.value = _uiState.value.copy(
+                joinedCommunityIds = _uiState.value.joinedCommunityIds + communityId
+            )
+        }
+    }
+
+    fun leaveCommunity(communityId: String) {
+        val userId = FirebaseDataModule.currentUserId ?: return
+        viewModelScope.launch {
+            communityRepository.leaveCommunity(communityId, userId)
+            _uiState.value = _uiState.value.copy(
+                joinedCommunityIds = _uiState.value.joinedCommunityIds - communityId
+            )
         }
     }
 

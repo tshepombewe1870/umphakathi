@@ -54,6 +54,20 @@ class MockReportRepository : ReportRepository {
         return Result.success(Unit)
     }
 
+    override suspend fun toggleLikeReport(reportId: String, userId: String): Result<Unit> {
+        _reports.value = _reports.value.map {
+            if (it.id == reportId) it.copy(likeCount = it.likeCount + 1) else it
+        }
+        return Result.success(Unit)
+    }
+
+    override suspend fun toggleLikeComment(commentId: String, userId: String): Result<Unit> {
+        _comments.value = _comments.value.map {
+            if (it.id == commentId) it.copy(likeCount = it.likeCount + 1) else it
+        }
+        return Result.success(Unit)
+    }
+
     override fun getComments(reportId: String): Flow<List<Comment>> = 
         _comments.map { list -> list.filter { it.postId == reportId } }
 
@@ -109,6 +123,12 @@ class MockReportRepository : ReportRepository {
         ) else emptyList()
     )
 
+    override suspend fun addOfficialUpdate(update: OfficialUpdate): Result<OfficialUpdate> {
+        val newUpdate = update.copy(id = UUID.randomUUID().toString(), createdAt = Instant.now())
+        // In a real mock we might store these in a flow, but for now we'll just return success
+        return Result.success(newUpdate)
+    }
+
     override fun getAuditEvents(reportId: String): Flow<List<AuditEvent>> = kotlinx.coroutines.flow.flowOf(
         listOf(
             AuditEvent(
@@ -140,6 +160,22 @@ class MockReportRepository : ReportRepository {
                 userName = "Sipho Dlamini",
                 description = "I saw this too on my way to work.",
                 createdAt = Instant.now().minus(10, java.time.temporal.ChronoUnit.HOURS)
+            ),
+            ReportExperience(
+                id = "exp-2",
+                reportId = reportId,
+                userId = "user-101",
+                userName = "Zanele Mthembu",
+                description = "Water is starting to enter my yard as well. It's getting serious.",
+                createdAt = Instant.now().minus(8, java.time.temporal.ChronoUnit.HOURS)
+            ),
+            ReportExperience(
+                id = "exp-3",
+                reportId = reportId,
+                userId = "user-202",
+                userName = "Kevin Naidoo",
+                description = "Tried to drive past, road is definitely blocked. Use the back route instead.",
+                createdAt = Instant.now().minus(5, java.time.temporal.ChronoUnit.HOURS)
             )
         )
     )

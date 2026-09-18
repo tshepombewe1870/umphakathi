@@ -153,7 +153,8 @@ fun MainNavigation() {
                     entry<CommunityNav> {
                         CommunityScreen(
                             searchQuery = globalSearchQuery,
-                            onCommunityClick = { id -> backStack.add(CommunityDetailNav(id) as NavKey) }
+                            onCommunityClick = { id -> backStack.add(CommunityDetailNav(id) as NavKey) },
+                            onNewReport = { cId -> backStack.add(ReportWizardNav(cId) as NavKey) }
                         )
                     }
                     entry<ReportWizardNav> { key ->

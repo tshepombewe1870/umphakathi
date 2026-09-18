@@ -15,4 +15,10 @@ interface CommunityRepository {
     suspend fun createPost(post: CommunityPost): Result<CommunityPost>
     suspend fun addComment(comment: Comment): Result<Comment>
     suspend fun markResolved(postId: String, resolvedBy: String): Result<Unit>
+    fun getNoticesForCommunity(communityId: String): Flow<List<com.sumsokol.umphakathi.domain.model.Notice>>
+    suspend fun createNotice(notice: com.sumsokol.umphakathi.domain.model.Notice): Result<com.sumsokol.umphakathi.domain.model.Notice>
+    suspend fun updateNoticeStatus(noticeId: String, status: com.sumsokol.umphakathi.domain.model.NoticeStatus): Result<Unit>
+    suspend fun joinCommunity(communityId: String, userId: String): Result<Unit>
+    suspend fun leaveCommunity(communityId: String, userId: String): Result<Unit>
+    fun isUserMember(communityId: String, userId: String): Flow<Boolean>
 }

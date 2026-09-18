@@ -434,8 +434,16 @@ fun TimelineEventRow(event: AuditEvent) {
                 color = MaterialTheme.colorScheme.outline
             )
             if (event.metadata.isNotEmpty()) {
+                val metadataText = when (event.action) {
+                    AuditAction.OFFICIAL_UPDATE_ADDED -> {
+                        val org = event.metadata["organizationName"] ?: "Organization"
+                        val msg = event.metadata["message"] ?: ""
+                        "$org: $msg"
+                    }
+                    else -> event.metadata.entries.joinToString { "${it.key}: ${it.value}" }
+                }
                 Text(
-                    text = event.metadata.entries.joinToString { "${it.key}: ${it.value}" },
+                    text = metadataText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -469,46 +477,85 @@ fun OfficialUpdateCard(update: OfficialUpdate) {
 }
 
 @Composable
-fun VolunteerOfferCard(offer: VolunteerOffer) {
+fun VolunteerOfferCard(
+    offer: VolunteerOffer,
+    onLike: (() -> Unit)? = null,
+    onComment: (() -> Unit)? = null
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.VolunteerActivism,
-                null,
-                Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = offer.userName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.VolunteerActivism,
+                    null,
+                    Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                Text(
-                    text = offer.resourceType.name.replace('_', ' ').lowercase()
-                        .replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                offer.note?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = offer.userName,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = offer.resourceType.name.replace('_', ' ').lowercase()
+                            .replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    offer.note?.let {
+                        Text(
+                            it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                val statusColor: Color = when (offer.status) {
+                    VolunteerStatus.ACCEPTED -> Color(0xFF388E3C)
+                    VolunteerStatus.OFFERED -> Color(0xFF1976D2)
+                    else -> Color.Gray
+                }
+                Surface(
+                    color = statusColor.copy(alpha = 0.15f),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        offer.status.name,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = statusColor,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
             }
-            val statusColor: Color = when(offer.status) {
-                VolunteerStatus.ACCEPTED -> Color(0xFF388E3C)
-                VolunteerStatus.OFFERED -> Color(0xFF1976D2)
-                else -> Color.Gray
-            }
-            Surface(
-                color = statusColor.copy(alpha = 0.15f),
-                shape = MaterialTheme.shapes.small
+
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    offer.status.name,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = statusColor,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                )
+                TextButton(
+                    onClick = { onLike?.invoke() },
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Icon(Icons.Default.ThumbUp, null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(offer.likeCount.toString(), style = MaterialTheme.typography.labelSmall)
+                }
+                Spacer(Modifier.width(16.dp))
+                TextButton(
+                    onClick = { onComment?.invoke() },
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.Comment, null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(offer.commentCount.toString(), style = MaterialTheme.typography.labelSmall)
+                }
             }
         }
     }

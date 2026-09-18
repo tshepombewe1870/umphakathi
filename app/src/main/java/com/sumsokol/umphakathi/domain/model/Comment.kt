@@ -9,6 +9,7 @@ data class Comment(
     val authorName: String = "Anonymous",
     val parentCommentId: String? = null,
     val body: String,
+    val likeCount: Int = 0,
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = Instant.now(),
     val isDeleted: Boolean = false

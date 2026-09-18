@@ -84,4 +84,54 @@ class FirestoreVolunteerRepository(private val db: FirebaseFirestore) : Voluntee
         db.collection("volunteerOffers").document(offerId)
             .update("status", status.name).await()
     }
+
+    override suspend fun toggleLikeOffer(offerId: String, userId: String): Result<Unit> = runCatching {
+        val likeRef = db.collection("volunteerOfferLikes").document("${offerId}_${userId}")
+        val offerRef = db.collection("volunteerOffers").document(offerId)
+        
+        db.runTransaction { transaction ->
+            val likeSnapshot = transaction.get(likeRef)
+            val offerSnapshot = transaction.get(offerRef)
+            val currentLikes = offerSnapshot.getLong("likeCount") ?: 0
+            
+            if (likeSnapshot.exists()) {
+                transaction.delete(likeRef)
+                transaction.update(offerRef, "likeCount", (currentLikes - 1).coerceAtLeast(0))
+            } else {
+                transaction.set(likeRef, mapOf("offerId" to offerId, "userId" to userId, "createdAt" to com.google.firebase.Timestamp.now()))
+                transaction.update(offerRef, "likeCount", currentLikes + 1)
+            }
+        }.await()
+    }
+
+    override fun getComments(offerId: String): Flow<List<com.sumsokol.umphakathi.domain.model.Comment>> = callbackFlow {
+        val subscription = db.collection("volunteerComments")
+            .whereEqualTo("offerId", offerId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    trySend(snapshot.documents.mapNotNull { it.toComment() }.sortedBy { it.createdAt })
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    override suspend fun addComment(comment: com.sumsokol.umphakathi.domain.model.Comment): Result<com.sumsokol.umphakathi.domain.model.Comment> = runCatching {
+        val docRef = db.collection("volunteerComments").document()
+        val commentWithId = comment.copy(id = docRef.id)
+        
+        db.runTransaction { transaction ->
+            transaction.set(docRef, commentWithId.toFirestoreMap().toMutableMap().apply { 
+                put("offerId", comment.postId) // Reusing postId as offerId
+            })
+            
+            db.collection("volunteerOffers").document(comment.postId)
+                .update("commentCount", com.google.firebase.firestore.FieldValue.increment(1))
+        }.await()
+        
+        commentWithId
+    }
 }

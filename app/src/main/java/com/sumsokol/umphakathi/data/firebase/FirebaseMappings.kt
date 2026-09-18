@@ -32,6 +32,7 @@ internal fun Report.toFirestoreMap(): Map<String, Any?> = mapOf(
     "commentCount" to commentCount,
     "volunteerCount" to volunteerCount,
     "shareCount" to shareCount,
+    "likeCount" to likeCount,
     "createdAt" to com.google.firebase.Timestamp(Date.from(createdAt)),
     "updatedAt" to com.google.firebase.Timestamp(Date.from(updatedAt))
 )
@@ -108,6 +109,7 @@ internal fun Comment.toFirestoreMap(): Map<String, Any?> = mapOf(
     "authorName" to authorName,
     "parentCommentId" to parentCommentId,
     "body" to body,
+    "likeCount" to likeCount,
     "createdAt" to com.google.firebase.Timestamp(Date.from(createdAt)),
     "updatedAt" to com.google.firebase.Timestamp(Date.from(updatedAt)),
     "isDeleted" to isDeleted
@@ -123,6 +125,23 @@ internal fun Resolution.toFirestoreMap(): Map<String, Any?> = mapOf(
     "createdAt" to com.google.firebase.Timestamp(Date.from(createdAt))
 )
 
+internal fun Notice.toFirestoreMap(): Map<String, Any?> = mapOf(
+    "id" to id,
+    "communityId" to communityId,
+    "creatorId" to creatorId,
+    "creatorName" to creatorName,
+    "creatorType" to creatorType,
+    "title" to title,
+    "body" to body,
+    "type" to type.name,
+    "status" to status.name,
+    "startTime" to startTime?.let { com.google.firebase.Timestamp(Date.from(it)) },
+    "endTime" to endTime?.let { com.google.firebase.Timestamp(Date.from(it)) },
+    "locationDescription" to locationDescription,
+    "createdAt" to com.google.firebase.Timestamp(Date.from(createdAt)),
+    "updatedAt" to com.google.firebase.Timestamp(Date.from(updatedAt))
+)
+
 internal fun VolunteerOffer.toFirestoreMap(): Map<String, Any?> = mapOf(
     "id" to id,
     "userId" to userId,
@@ -134,6 +153,8 @@ internal fun VolunteerOffer.toFirestoreMap(): Map<String, Any?> = mapOf(
     "quantity" to quantity,
     "note" to note,
     "status" to status.name,
+    "likeCount" to likeCount,
+    "commentCount" to commentCount,
     "createdAt" to com.google.firebase.Timestamp(Date.from(createdAt)),
     "updatedAt" to com.google.firebase.Timestamp(Date.from(updatedAt))
 )
@@ -233,6 +254,7 @@ internal fun com.google.firebase.firestore.DocumentSnapshot.toReport(): Report? 
         commentCount = getLong("commentCount")?.toInt() ?: 0,
         volunteerCount = getLong("volunteerCount")?.toInt() ?: 0,
         shareCount = getLong("shareCount")?.toInt() ?: 0,
+        likeCount = getLong("likeCount")?.toInt() ?: 0,
         createdAt = getTimestamp("createdAt")?.toDate()?.toInstant() ?: java.time.Instant.now(),
         updatedAt = getTimestamp("updatedAt")?.toDate()?.toInstant() ?: java.time.Instant.now()
     )
@@ -273,9 +295,10 @@ internal fun com.google.firebase.firestore.DocumentSnapshot.toCrisis(): Crisis? 
 } catch (e: Exception) { null }
 
 internal fun com.google.firebase.firestore.DocumentSnapshot.toUser(): User? = try {
+    val username = getString("username")
     User(
         id = getString("id") ?: id,
-        username = getString("username") ?: "",
+        username = if (username.isNullOrBlank()) "user_${id.take(4)}" else username,
         accountType = AccountType.valueOf(getString("accountType") ?: "PERSON"),
         role = getString("role"),
         communityName = getString("communityName"),
@@ -333,6 +356,7 @@ internal fun com.google.firebase.firestore.DocumentSnapshot.toComment(): Comment
         authorName = getString("authorName") ?: "Anonymous",
         parentCommentId = getString("parentCommentId"),
         body = getString("body") ?: "",
+        likeCount = getLong("likeCount")?.toInt() ?: 0,
         createdAt = getTimestamp("createdAt")?.toDate()?.toInstant() ?: java.time.Instant.now(),
         updatedAt = getTimestamp("updatedAt")?.toDate()?.toInstant() ?: java.time.Instant.now(),
         isDeleted = getBoolean("isDeleted") ?: false
@@ -340,10 +364,11 @@ internal fun com.google.firebase.firestore.DocumentSnapshot.toComment(): Comment
 } catch (e: Exception) { null }
 
 internal fun com.google.firebase.firestore.DocumentSnapshot.toVolunteerOffer(): VolunteerOffer? = try {
+    val userName = getString("userName")
     VolunteerOffer(
         id = getString("id") ?: id,
         userId = getString("userId") ?: "",
-        userName = getString("userName") ?: "Anonymous",
+        userName = if (userName.isNullOrBlank()) "Anonymous" else userName,
         reportId = getString("reportId"),
         crisisId = getString("crisisId"),
         postId = getString("postId"),
@@ -351,17 +376,20 @@ internal fun com.google.firebase.firestore.DocumentSnapshot.toVolunteerOffer(): 
         quantity = getLong("quantity")?.toInt(),
         note = getString("note"),
         status = VolunteerStatus.valueOf(getString("status") ?: "OFFERED"),
+        likeCount = getLong("likeCount")?.toInt() ?: 0,
+        commentCount = getLong("commentCount")?.toInt() ?: 0,
         createdAt = getTimestamp("createdAt")?.toDate()?.toInstant() ?: java.time.Instant.now(),
         updatedAt = getTimestamp("updatedAt")?.toDate()?.toInstant() ?: java.time.Instant.now()
     )
 } catch (e: Exception) { null }
 
 internal fun com.google.firebase.firestore.DocumentSnapshot.toOfficialUpdate(): OfficialUpdate? = try {
+    val orgName = getString("organizationName")
     OfficialUpdate(
         id = getString("id") ?: id,
         reportId = getString("reportId") ?: "",
         organizationId = getString("organizationId") ?: "",
-        organizationName = getString("organizationName") ?: "",
+        organizationName = if (orgName.isNullOrBlank()) "Organization" else orgName,
         message = getString("message") ?: "",
         statusUpdate = getString("statusUpdate")?.let { ReportStatus.valueOf(it) },
         createdAt = getTimestamp("createdAt")?.toDate()?.toInstant() ?: java.time.Instant.now()
@@ -381,13 +409,33 @@ internal fun com.google.firebase.firestore.DocumentSnapshot.toAuditEvent(): Audi
 } catch (e: Exception) { null }
 
 internal fun com.google.firebase.firestore.DocumentSnapshot.toReportExperience(): ReportExperience? = try {
+    val userName = getString("userName")
     ReportExperience(
         id = getString("id") ?: id,
         reportId = getString("reportId") ?: "",
         userId = getString("userId") ?: "",
-        userName = getString("userName") ?: "Anonymous",
+        userName = if (userName.isNullOrBlank()) "Anonymous" else userName,
         description = getString("description"),
         incidentStartedAt = getTimestamp("incidentStartedAt")?.toDate()?.toInstant(),
         createdAt = getTimestamp("createdAt")?.toDate()?.toInstant() ?: java.time.Instant.now()
+    )
+} catch (e: Exception) { null }
+
+internal fun com.google.firebase.firestore.DocumentSnapshot.toNotice(): Notice? = try {
+    Notice(
+        id = getString("id") ?: id,
+        communityId = getString("communityId") ?: "",
+        creatorId = getString("creatorId") ?: "",
+        creatorName = getString("creatorName") ?: "",
+        creatorType = getString("creatorType") ?: "PERSON",
+        title = getString("title") ?: "",
+        body = getString("body") ?: "",
+        type = NoticeType.valueOf(getString("type") ?: "COMMUNITY_EVENT"),
+        status = NoticeStatus.valueOf(getString("status") ?: "PENDING_APPROVAL"),
+        startTime = getTimestamp("startTime")?.toDate()?.toInstant(),
+        endTime = getTimestamp("endTime")?.toDate()?.toInstant(),
+        locationDescription = getString("locationDescription"),
+        createdAt = getTimestamp("createdAt")?.toDate()?.toInstant() ?: java.time.Instant.now(),
+        updatedAt = getTimestamp("updatedAt")?.toDate()?.toInstant() ?: java.time.Instant.now()
     )
 } catch (e: Exception) { null }

@@ -19,6 +19,8 @@ data class VolunteerOffer(
     val quantity: Int? = null,
     val note: String? = null,
     val status: VolunteerStatus = VolunteerStatus.OFFERED,
+    val likeCount: Int = 0,
+    val commentCount: Int = 0,
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = Instant.now()
 )

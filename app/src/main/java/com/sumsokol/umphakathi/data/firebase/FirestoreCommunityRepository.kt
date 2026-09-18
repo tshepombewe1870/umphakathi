@@ -118,4 +118,63 @@ class FirestoreCommunityRepository(private val db: FirebaseFirestore) : Communit
                 "updatedAt" to com.google.firebase.Timestamp.now()
             )).await()
     }
+
+    override fun getNoticesForCommunity(communityId: String): Flow<List<Notice>> = callbackFlow {
+        val subscription = db.collection("notices")
+            .whereEqualTo("communityId", communityId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    android.util.Log.e("FirestoreCommunityRepo", "Error fetching notices: ${error.message}")
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    trySend(snapshot.documents.mapNotNull { it.toNotice() }.sortedByDescending { it.createdAt })
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    override suspend fun createNotice(notice: Notice): Result<Notice> = runCatching {
+        val docRef = db.collection("notices").document()
+        val noticeWithId = notice.copy(id = docRef.id)
+        docRef.set(noticeWithId.toFirestoreMap()).await()
+        noticeWithId
+    }
+
+    override suspend fun updateNoticeStatus(noticeId: String, status: NoticeStatus): Result<Unit> = runCatching {
+        db.collection("notices").document(noticeId)
+            .update(mapOf(
+                "status" to status.name,
+                "updatedAt" to com.google.firebase.Timestamp.now()
+            )).await()
+    }
+
+    override suspend fun joinCommunity(communityId: String, userId: String): Result<Unit> = runCatching {
+        db.collection("communities").document(communityId)
+            .update("memberCount", com.google.firebase.firestore.FieldValue.increment(1))
+            .await()
+        db.collection("memberships").document("${communityId}_${userId}").set(
+            mapOf(
+                "communityId" to communityId,
+                "userId" to userId,
+                "joinedAt" to com.google.firebase.Timestamp.now()
+            )
+        ).await()
+    }
+
+    override suspend fun leaveCommunity(communityId: String, userId: String): Result<Unit> = runCatching {
+        db.collection("communities").document(communityId)
+            .update("memberCount", com.google.firebase.firestore.FieldValue.increment(-1))
+            .await()
+        db.collection("memberships").document("${communityId}_${userId}").delete().await()
+    }
+
+    override fun isUserMember(communityId: String, userId: String): Flow<Boolean> = callbackFlow {
+        val subscription = db.collection("memberships").document("${communityId}_${userId}")
+            .addSnapshotListener { snapshot, _ ->
+                trySend(snapshot?.exists() == true)
+            }
+        awaitClose { subscription.remove() }
+    }
 }

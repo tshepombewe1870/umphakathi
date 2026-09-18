@@ -107,6 +107,44 @@ class FirestoreReportRepository(private val db: FirebaseFirestore) : ReportRepos
         }.await()
     }
 
+    override suspend fun toggleLikeReport(reportId: String, userId: String): Result<Unit> = runCatching {
+        val likeRef = db.collection("reportLikes").document("${reportId}_${userId}")
+        val reportRef = db.collection("reports").document(reportId)
+        
+        db.runTransaction { transaction ->
+            val likeSnapshot = transaction.get(likeRef)
+            val reportSnapshot = transaction.get(reportRef)
+            val currentLikes = reportSnapshot.getLong("likeCount") ?: 0
+            
+            if (likeSnapshot.exists()) {
+                transaction.delete(likeRef)
+                transaction.update(reportRef, "likeCount", (currentLikes - 1).coerceAtLeast(0))
+            } else {
+                transaction.set(likeRef, mapOf("reportId" to reportId, "userId" to userId, "createdAt" to com.google.firebase.Timestamp.now()))
+                transaction.update(reportRef, "likeCount", currentLikes + 1)
+            }
+        }.await()
+    }
+
+    override suspend fun toggleLikeComment(commentId: String, userId: String): Result<Unit> = runCatching {
+        val likeRef = db.collection("commentLikes").document("${commentId}_${userId}")
+        val commentRef = db.collection("comments").document(commentId)
+        
+        db.runTransaction { transaction ->
+            val likeSnapshot = transaction.get(likeRef)
+            val commentSnapshot = transaction.get(commentRef)
+            val currentLikes = commentSnapshot.getLong("likeCount") ?: 0
+            
+            if (likeSnapshot.exists()) {
+                transaction.delete(likeRef)
+                transaction.update(commentRef, "likeCount", (currentLikes - 1).coerceAtLeast(0))
+            } else {
+                transaction.set(likeRef, mapOf("commentId" to commentId, "userId" to userId, "createdAt" to com.google.firebase.Timestamp.now()))
+                transaction.update(commentRef, "likeCount", currentLikes + 1)
+            }
+        }.await()
+    }
+
     override suspend fun flagAsCrisis(reportId: String, userId: String): Result<Unit> = runCatching {
         val signalRef = db.collection("crisisSignals").document()
         signalRef.set(mapOf(
@@ -170,6 +208,37 @@ class FirestoreReportRepository(private val db: FirebaseFirestore) : ReportRepos
                 }
             }
         awaitClose { subscription.remove() }
+    }
+
+    override suspend fun addOfficialUpdate(update: OfficialUpdate): Result<OfficialUpdate> = runCatching {
+        val docRef = db.collection("officialUpdates").document()
+        val updateWithId = update.copy(id = docRef.id)
+        docRef.set(updateWithId.toFirestoreMap()).await()
+        
+        // If a status update is included, update the report status too
+        update.statusUpdate?.let { status ->
+            db.collection("reports").document(update.reportId)
+                .update("status", status.name)
+        }
+
+        // Add to incident timeline (AuditEvents)
+        val auditRef = db.collection("auditEvents").document()
+        val auditEvent = AuditEvent(
+            id = auditRef.id,
+            entityType = "REPORT",
+            entityId = update.reportId,
+            actorId = update.organizationId,
+            action = AuditAction.OFFICIAL_UPDATE_ADDED,
+            metadata = mapOf(
+                "organizationName" to update.organizationName,
+                "message" to update.message.take(100),
+                "statusUpdate" to (update.statusUpdate?.name ?: "")
+            ),
+            createdAt = Instant.now()
+        )
+        auditRef.set(auditEvent.toFirestoreMap()).await()
+        
+        updateWithId
     }
 
     override fun getAuditEvents(reportId: String): Flow<List<AuditEvent>> = callbackFlow {

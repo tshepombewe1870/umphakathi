@@ -34,38 +34,75 @@ class MockVolunteerRepository : VolunteerRepository {
         return Result.success(Unit)
     }
 
+    override suspend fun toggleLikeOffer(offerId: String, userId: String): Result<Unit> {
+        _offers.value = _offers.value.map {
+            if (it.id == offerId) it.copy(likeCount = it.likeCount + 1) else it
+        }
+        return Result.success(Unit)
+    }
+
+    override fun getComments(offerId: String): Flow<List<Comment>> = 
+        kotlinx.coroutines.flow.flowOf(emptyList()) // Simple mock
+
+    override suspend fun addComment(comment: Comment): Result<Comment> {
+        return Result.success(comment)
+    }
+
     private fun sampleOffers() = listOf(
         VolunteerOffer(
             id = "offer-001",
             userId = "user-aaa",
+            userName = "Thabo N.",
+            reportId = "report-001",
             crisisId = "crisis-001",
             postId = "post-002",
             resourceType = ResourceType.TRANSPORT,
             quantity = 1,
             note = "Have a bakkie, can help transport water containers",
             status = VolunteerStatus.ACCEPTED,
+            likeCount = 12,
+            commentCount = 3,
             createdAt = Instant.now().minus(5, ChronoUnit.HOURS)
         ),
         VolunteerOffer(
             id = "offer-002",
             userId = "user-bbb",
+            userName = "Lerato M.",
+            reportId = "report-001",
             crisisId = "crisis-001",
             resourceType = ResourceType.MANPOWER,
             quantity = 3,
             note = "Myself and 2 family members available to help",
             status = VolunteerStatus.OFFERED,
+            likeCount = 5,
             createdAt = Instant.now().minus(4, ChronoUnit.HOURS)
         ),
         VolunteerOffer(
             id = "offer-003",
             userId = "user-ccc",
+            userName = "David K.",
+            reportId = "report-002",
             crisisId = "crisis-002",
             postId = "post-003",
             resourceType = ResourceType.MANPOWER,
             quantity = 5,
             note = "Search party ready with flashlights and water for the team",
             status = VolunteerStatus.ACCEPTED,
+            likeCount = 24,
+            commentCount = 8,
             createdAt = Instant.now().minus(18, ChronoUnit.HOURS)
+        ),
+        VolunteerOffer(
+            id = "offer-004",
+            userId = "user-ddd",
+            userName = "Sarah J.",
+            reportId = "report-001",
+            resourceType = ResourceType.SUPPLIES,
+            quantity = 20,
+            note = "Can donate 20L bottles of water",
+            status = VolunteerStatus.OFFERED,
+            likeCount = 2,
+            createdAt = Instant.now().minus(2, ChronoUnit.HOURS)
         )
     )
 }

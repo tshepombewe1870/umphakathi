@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.sumsokol.umphakathi.data.firebase.FirebaseDataModule
+import com.sumsokol.umphakathi.domain.model.Comment
 import com.sumsokol.umphakathi.domain.model.Report
+import com.sumsokol.umphakathi.domain.model.ReportStatus
 import com.sumsokol.umphakathi.domain.model.VolunteerOffer
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.time.Instant
 
 data class ReportDetailUiState(
     val report: Report? = null,
@@ -21,6 +24,7 @@ data class ReportDetailUiState(
     val auditEvents: List<com.sumsokol.umphakathi.domain.model.AuditEvent> = emptyList(),
     val corroborations: List<com.sumsokol.umphakathi.domain.model.ReportExperience> = emptyList(),
     val shares: List<com.sumsokol.umphakathi.domain.model.CommunityPost> = emptyList(),
+    val comments: List<Comment> = emptyList(),
     val isLoading: Boolean = true,
     val userHasMeTood: Boolean = false,
     val error: String? = null
@@ -42,7 +46,8 @@ class ReportDetailViewModel(private val reportId: String) : ViewModel() {
                 reportRepository.getOfficialUpdates(reportId),
                 reportRepository.getAuditEvents(reportId),
                 reportRepository.getExperiences(reportId),
-                communityRepository.getPostsByReport(reportId)
+                communityRepository.getPostsByReport(reportId),
+                reportRepository.getComments(reportId)
             ) { array ->
                 @Suppress("UNCHECKED_CAST")
                 val report = array[0] as com.sumsokol.umphakathi.domain.model.Report?
@@ -56,7 +61,9 @@ class ReportDetailViewModel(private val reportId: String) : ViewModel() {
                 val corroborations = array[4] as List<com.sumsokol.umphakathi.domain.model.ReportExperience>
                 @Suppress("UNCHECKED_CAST")
                 val shares = array[5] as List<com.sumsokol.umphakathi.domain.model.CommunityPost>
-                
+                @Suppress("UNCHECKED_CAST")
+                val comments = array[6] as List<Comment>
+
                 ReportDetailUiState(
                     report = report,
                     volunteerOffers = offers,
@@ -64,6 +71,7 @@ class ReportDetailViewModel(private val reportId: String) : ViewModel() {
                     auditEvents = audits,
                     corroborations = corroborations,
                     shares = shares,
+                    comments = comments,
                     isLoading = false
                 )
             }.collect { state ->
@@ -84,7 +92,7 @@ class ReportDetailViewModel(private val reportId: String) : ViewModel() {
         viewModelScope.launch {
             // Fetch user name for the offer
             val user = FirebaseDataModule.userRepository.getOrCreateUser(userId)
-            
+
             resourceTypes.forEach { type ->
                 volunteerRepository.submitOffer(
                     VolunteerOffer(
@@ -127,6 +135,70 @@ class ReportDetailViewModel(private val reportId: String) : ViewModel() {
                 explanation = explanation
             )
             reportRepository.resolveReport(reportId, resolution)
+        }
+    }
+
+    fun postOfficialUpdate(message: String, statusUpdate: ReportStatus?) {
+        val userId = FirebaseDataModule.currentUserId ?: return
+        viewModelScope.launch {
+            val user = FirebaseDataModule.userRepository.getOrCreateUser(userId)
+            if (user.accountType.name != "ORGANIZATION") return@launch
+
+            val update = com.sumsokol.umphakathi.domain.model.OfficialUpdate(
+                id = "",
+                reportId = reportId,
+                organizationId = userId,
+                organizationName = user.communityName ?: user.username,
+                message = message,
+                statusUpdate = statusUpdate
+            )
+            reportRepository.addOfficialUpdate(update)
+        }
+    }
+
+    fun toggleLikeOffer(offerId: String) {
+        val userId = FirebaseDataModule.currentUserId ?: return
+        viewModelScope.launch {
+            volunteerRepository.toggleLikeOffer(offerId, userId)
+        }
+    }
+
+    fun addVolunteerComment(offerId: String, body: String) {
+        val userId = FirebaseDataModule.currentUserId ?: return
+        viewModelScope.launch {
+            val user = FirebaseDataModule.userRepository.getOrCreateUser(userId)
+            volunteerRepository.addComment(
+                com.sumsokol.umphakathi.domain.model.Comment(
+                    id = "",
+                    postId = offerId, // using postId for offerId in comments
+                    authorId = userId,
+                    authorName = user.username,
+                    body = body,
+                    createdAt = Instant.now()
+                )
+            )
+        }
+    }
+
+    /**
+     * Comments on the report itself (distinct from addVolunteerComment, which comments
+     * on a specific volunteer offer). Powers the Community tab + CommentBottomSheet.
+     */
+    fun addComment(body: String, parentCommentId: String? = null) {
+        val userId = FirebaseDataModule.currentUserId ?: return
+        viewModelScope.launch {
+            val user = FirebaseDataModule.userRepository.getOrCreateUser(userId)
+            reportRepository.addComment(
+                Comment(
+                    id = "",
+                    postId = reportId,
+                    authorId = userId,
+                    authorName = user.username,
+                    parentCommentId = parentCommentId,
+                    body = body,
+                    createdAt = Instant.now()
+                )
+            )
         }
     }
 
