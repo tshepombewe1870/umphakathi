@@ -76,59 +76,71 @@ fun MainNavigation() {
         )
     }
 
+    val currentNavKey = backStack.lastOrNull()
+    val hideTopBar = currentNavKey is ReportDetailNav || 
+                     currentNavKey is AccountNav || 
+                     currentNavKey is ReportWizardNav
+                     
+    val hideBottomBar = currentNavKey is ReportDetailNav || 
+                        currentNavKey is ReportWizardNav
+
     Scaffold(
         topBar = {
-            GlobalTopAppBar(
-                searchQuery = globalSearchQuery,
-                showBackButton = backStack.size > 1,
-                onBack = { backStack.removeLastOrNull() },
-                onAvatarClick = {
-                    if (selectedTab !is AccountNav) {
-                        selectedTab = AccountNav
-                        backStack.add(AccountNav as NavKey)
-                    }
-                },
-                onSearch = { globalSearchQuery = it }
-            )
+            if (!hideTopBar) {
+                GlobalTopAppBar(
+                    searchQuery = globalSearchQuery,
+                    showBackButton = backStack.size > 1,
+                    onBack = { backStack.removeLastOrNull() },
+                    onAvatarClick = {
+                        if (selectedTab !is AccountNav) {
+                            selectedTab = AccountNav
+                            backStack.add(AccountNav as NavKey)
+                        }
+                    },
+                    onSearch = { globalSearchQuery = it }
+                )
+            }
         },
         bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = selectedTab is HomeNav,
-                    onClick = {
-                        selectedTab = HomeNav
-                        backStack.add(HomeNav as NavKey)
-                    },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    label = { Text("Home") }
-                )
-                NavigationBarItem(
-                    selected = selectedTab is CommunityNav,
-                    onClick = {
-                        selectedTab = CommunityNav
-                        backStack.add(CommunityNav as NavKey)
-                    },
-                    icon = { Icon(Icons.Default.Groups, contentDescription = "Community") },
-                    label = { Text("Community") }
-                )
-                NavigationBarItem(
-                    selected = selectedTab is ReportNav,
-                    onClick = {
-                        selectedTab = ReportNav
-                        backStack.add(ReportWizardNav() as NavKey)
-                    },
-                    icon = { Icon(Icons.Default.AddCircle, contentDescription = "Report") },
-                    label = { Text("Report") }
-                )
-                NavigationBarItem(
-                    selected = selectedTab is AccountNav,
-                    onClick = {
-                        selectedTab = AccountNav
-                        backStack.add(AccountNav as NavKey)
-                    },
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Account") },
-                    label = { Text("Account") }
-                )
+            if (!hideBottomBar) {
+                NavigationBar {
+                    NavigationBarItem(
+                        selected = selectedTab is HomeNav,
+                        onClick = {
+                            selectedTab = HomeNav
+                            backStack.add(HomeNav as NavKey)
+                        },
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                        label = { Text("Home") }
+                    )
+                    NavigationBarItem(
+                        selected = selectedTab is CommunityNav,
+                        onClick = {
+                            selectedTab = CommunityNav
+                            backStack.add(CommunityNav as NavKey)
+                        },
+                        icon = { Icon(Icons.Default.Groups, contentDescription = "Community") },
+                        label = { Text("Community") }
+                    )
+                    NavigationBarItem(
+                        selected = selectedTab is ReportNav,
+                        onClick = {
+                            selectedTab = ReportNav
+                            backStack.add(ReportWizardNav() as NavKey)
+                        },
+                        icon = { Icon(Icons.Default.AddCircle, contentDescription = "Report") },
+                        label = { Text("Report") }
+                    )
+                    NavigationBarItem(
+                        selected = selectedTab is AccountNav,
+                        onClick = {
+                            selectedTab = AccountNav
+                            backStack.add(AccountNav as NavKey)
+                        },
+                        icon = { Icon(Icons.Default.Person, contentDescription = "Account") },
+                        label = { Text("Account") }
+                    )
+                }
             }
         }
     ) { innerPadding ->
