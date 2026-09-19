@@ -184,4 +184,4 @@ Nested threads linking back to community posts, reports, or update boards for cr
 *   **Crisis ── (1 : 0..*) ── Report**: A crisis entity indexes dozens of distinct report instances to give response teams a unified spatial look at systemic emergencies.
 
 ### 📋 History & Governance Tracks
-*   **Report ── (1 : 0..*) ── AuditEvent**: Every automated triage transition, authority signature, or severity escalation registers a distinct, immutable history event row (`AuditEvent`) pointing explicitly to the asset container via `entityId`.
+*   **Report ── (1 : 0..*) ── AuditEvent**: Every automated triage transition, authority signature, or severity escalation registers a distinct, immutable history event row (`AuditEvent`) pointing explicitly to the asset container via `entityId`..
