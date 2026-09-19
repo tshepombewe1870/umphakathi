@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="gcm_defaultSenderId" translatable="false">85030119924</string>
-    <string name="google_api_key" translatable="false">AIzaSyA7UQy6YlJ9Lir8K26w6eueLPcJYtA7EqU</string>
-    <string name="google_app_id" translatable="false">1:85030119924:android:36a56536a4dfe5c95371a1</string>
-    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyA7UQy6YlJ9Lir8K26w6eueLPcJYtA7EqU</string>
-    <string name="google_storage_bucket" translatable="false">umphakathi-6a4a7.firebasestorage.app</string>
-    <string name="project_id" translatable="false">umphakathi-6a4a7</string>
-</resources>
