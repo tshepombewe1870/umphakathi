@@ -8,6 +8,15 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 /build
+# Ignore app build folder but keep APK outputs
+/app/build/*
+!/app/build/outputs/
+/app/build/outputs/*
+!/app/build/outputs/apk/
+/app/build/outputs/apk/*
+!/app/build/outputs/apk/debug/
+/app/build/outputs/apk/debug/*
+!/app/build/outputs/apk/debug/*.apk
 .DS_Store
 /captures
 .externalNativeBuild
