@@ -27,7 +27,9 @@ data class ReportDraft(
     val urgency: Urgency = Urgency.MEDIUM,
     val potentialHarm: PotentialHarm = PotentialHarm.MODERATE,
     val locationVisibility: LocationVisibility = LocationVisibility.PUBLIC_APPROXIMATE,
-    val communityId: String? = null
+    val isAnonymous: Boolean = false,
+    val communityId: String? = null,
+    val communityName: String? = null
 )
 
 data class WizardUiState(
@@ -43,6 +45,47 @@ class ReportWizardViewModel(private val communityId: String? = null) : ViewModel
 
     private val _uiState = MutableStateFlow(WizardUiState(draft = ReportDraft(communityId = communityId)))
     val uiState: StateFlow<WizardUiState> = _uiState.asStateFlow()
+
+    init {
+        if (communityId != null) {
+            viewModelScope.launch {
+                FirebaseDataModule.communityRepository.getCommunity(communityId).collect { community ->
+                    if (community != null) {
+                        val communityLoc = community.location
+                        var inferredNeighborhood = ""
+                        var inferredCity = ""
+                        if (!communityLoc.isNullOrBlank()) {
+                            val parts = communityLoc.split(",")
+                            inferredNeighborhood = parts.firstOrNull()?.trim() ?: ""
+                            inferredCity = parts.getOrNull(1)?.trim() ?: ""
+                        }
+                        _uiState.value = _uiState.value.copy(
+                            draft = _uiState.value.draft.copy(
+                                communityName = community.name,
+                                neighborhood = _uiState.value.draft.neighborhood.ifBlank { inferredNeighborhood },
+                                city = _uiState.value.draft.city.ifBlank { inferredCity },
+                                locationSource = if (_uiState.value.draft.locationSource == LocationSource.NOT_PROVIDED && !inferredNeighborhood.isBlank()) LocationSource.MANUALLY_DESCRIBED else _uiState.value.draft.locationSource
+                            )
+                        )
+                    } else {
+                        // Check if it's an organization
+                        FirebaseDataModule.organizationRepository.getOrganization(communityId).collect { org ->
+                            if (org != null) {
+                                val inferredNeighborhood = org.serviceAreas.firstOrNull() ?: ""
+                                _uiState.value = _uiState.value.copy(
+                                    draft = _uiState.value.draft.copy(
+                                        communityName = org.name,
+                                        neighborhood = _uiState.value.draft.neighborhood.ifBlank { inferredNeighborhood },
+                                        locationSource = if (_uiState.value.draft.locationSource == LocationSource.NOT_PROVIDED && !inferredNeighborhood.isBlank()) LocationSource.MANUALLY_DESCRIBED else _uiState.value.draft.locationSource
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     fun selectCategory(category: ReportCategory) {
         _uiState.value = _uiState.value.copy(
@@ -83,6 +126,12 @@ class ReportWizardViewModel(private val communityId: String? = null) : ViewModel
         )
     }
 
+    fun setAnonymous(isAnonymous: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            draft = _uiState.value.draft.copy(isAnonymous = isAnonymous)
+        )
+    }
+
     fun goBack() {
         val currentStep = _uiState.value.step
         val prevStep = when (currentStep) {
@@ -103,11 +152,14 @@ class ReportWizardViewModel(private val communityId: String? = null) : ViewModel
         _uiState.value = _uiState.value.copy(isSubmitting = true)
 
         viewModelScope.launch {
+            val user = FirebaseDataModule.userRepository.getOrCreateUser(userId)
             val report = Report(
                 id = UUID.randomUUID().toString(),
                 reporterId = userId,
-                reporterName = "Demo User", // Should ideally fetch from a user registry but good for mock
+                reporterName = user.username,
                 communityId = draft.communityId,
+                communityName = draft.communityName,
+                isAnonymous = draft.isAnonymous,
                 title = draft.title,
                 description = draft.description,
                 category = category,

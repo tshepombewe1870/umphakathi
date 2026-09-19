@@ -41,13 +41,17 @@ fun IncidentCard(
     commentCount: Int = 0,
     volunteerCount: Int = 0,
     shareCount: Int = 0,
+    authorId: String = "",
     authorName: String = "Anonymous",
+    communityId: String? = null,
     communityName: String? = null,
+    isAnonymous: Boolean = false,
     imageUrls: List<String> = emptyList(),
     onClick: (String) -> Unit,
     onUserClick: ((String) -> Unit)? = null,
     onCommunityClick: ((String) -> Unit)? = null,
     onMeToo: () -> Unit,
+    modifier: Modifier = Modifier,
     onComment: (String) -> Unit = {},
     onVolunteer: () -> Unit = {},
     onShare: () -> Unit = {},
@@ -55,9 +59,9 @@ fun IncidentCard(
     onImageClick: (List<String>, Int) -> Unit = { _, _ -> }
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(vertical = 6.dp)
     ) {
         val statusColor: Color = getStatusColor(status)
         LinearProgressIndicator(
@@ -78,7 +82,7 @@ fun IncidentCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
-                    onClick = { onUserClick?.invoke("authorId") ?: onClick(authorName) },
+                    onClick = { onUserClick?.invoke(authorId) ?: onClick(authorName) },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
@@ -92,18 +96,21 @@ fun IncidentCard(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
+                    val displayName = if (isAnonymous) "Anonymous Reporter" else authorName
                     Text(
-                        text = authorName,
+                        text = displayName,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { onUserClick?.invoke("authorId") ?: onClick(authorName) }
+                        modifier = Modifier.clickable { 
+                            if (!isAnonymous) onUserClick?.invoke(authorId) ?: onClick(authorName) 
+                        }
                     )
                     if (!communityName.isNullOrBlank()) {
                         Text(
                             text = communityName,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.clickable { onCommunityClick?.invoke("communityId") ?: onClick(communityName) }
+                            modifier = Modifier.clickable { communityId?.let { onCommunityClick?.invoke(it) } ?: onClick(communityName) }
                         )
                     }
                 }

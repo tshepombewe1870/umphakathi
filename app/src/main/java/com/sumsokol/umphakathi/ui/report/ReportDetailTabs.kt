@@ -55,8 +55,9 @@ fun ReportHeaderSection(report: Report, onImageClick: (Int) -> Unit, onMoreClick
                 )
                 Spacer(Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(report.reporterName, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                    if (!report.communityName.isNullOrBlank()) {
+                    val displayName = if (report.isAnonymous) "Anonymous Reporter" else report.reporterName
+                    Text(displayName, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                    if (!report.isAnonymous && !report.communityName.isNullOrBlank()) {
                         Text(report.communityName, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                     }
                 }
@@ -212,6 +213,28 @@ fun OverviewTab(report: Report, uiState: ReportDetailUiState, onStatClick: (Stat
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.outline
                             )
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Text("Clear Next Steps", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text("In addition to this report, you may want to take these actions:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+
+        items(getNextStepsForCategory(report.category)) { step ->
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(step.title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Text(step.description, style = MaterialTheme.typography.bodySmall)
+                    }
+                    step.hotline?.let {
+                        IconButton(onClick = { /* Call hotline */ }) {
+                            Icon(Icons.Default.Phone, "Call", tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }

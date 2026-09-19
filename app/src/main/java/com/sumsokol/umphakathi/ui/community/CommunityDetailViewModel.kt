@@ -22,6 +22,10 @@ data class CommunityDetailUiState(
     val community: Community? = null,
     val posts: List<CommunityPost> = emptyList(),
     val notices: List<Notice> = emptyList(),
+    val selectedFilter: String = "All",
+    val allCount: Int = 0,
+    val resolvedCount: Int = 0,
+    val activeCount: Int = 0,
     val isMember: Boolean = false,
     val isLoading: Boolean = true
 )
@@ -32,6 +36,23 @@ class CommunityDetailViewModel(private val communityId: String) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CommunityDetailUiState())
     val uiState: StateFlow<CommunityDetailUiState> = _uiState.asStateFlow()
+
+    private var allPosts: List<CommunityPost> = emptyList()
+
+    fun setFilter(filter: String) {
+        _uiState.value = _uiState.value.copy(
+            selectedFilter = filter,
+            posts = applyFilter(allPosts, filter)
+        )
+    }
+
+    private fun applyFilter(posts: List<CommunityPost>, filter: String): List<CommunityPost> {
+        return when (filter) {
+            "Resolved" -> posts.filter { it.status == PostStatus.RESOLVED }
+            "Active" -> posts.filter { it.status != PostStatus.RESOLVED }
+            else -> posts
+        }
+    }
 
     fun joinCommunity() {
         val userId = FirebaseDataModule.currentUserId ?: return

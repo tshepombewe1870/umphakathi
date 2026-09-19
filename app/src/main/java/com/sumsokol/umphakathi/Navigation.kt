@@ -205,6 +205,10 @@ fun MainNavigation() {
                             searchQuery = globalSearchQuery,
                             onBack = { backStack.removeLastOrNull() },
                             onReportClick = { id -> backStack.add(ReportDetailNav(id) as NavKey) },
+                            onUserClick = { uId -> 
+                                if (uId != key.userId) backStack.add(PublicProfileNav(uId) as NavKey) 
+                            },
+                            onCommunityClick = { cId -> backStack.add(CommunityDetailNav(cId) as NavKey) },
                             onCommentClick = { id -> activeCommentsReportId = id },
                             onImageClick = { urls, index -> backStack.add(ImageSlideshowNav(urls, index) as NavKey) }
                         )
@@ -227,6 +231,7 @@ fun MainNavigation() {
                             communityId = key.communityId,
                             onBack = { backStack.removeLastOrNull() },
                             onPostClick = { id -> backStack.add(ReportDetailNav(id) as NavKey) },
+                            onUserClick = { uId -> backStack.add(PublicProfileNav(uId) as NavKey) },
                             onCommentClick = { id -> activeCommentsReportId = id },
                             onImageClick = { urls, index -> backStack.add(ImageSlideshowNav(urls, index) as NavKey) },
                             onNewReport = { cId -> backStack.add(ReportWizardNav(cId) as NavKey) }
@@ -236,7 +241,9 @@ fun MainNavigation() {
                         OrganizationDetailScreen(
                             organizationId = key.organizationId,
                             onBack = { backStack.removeLastOrNull() },
-                            onReportClick = { id -> backStack.add(ReportDetailNav(id) as NavKey) }
+                            onReportClick = { id -> backStack.add(ReportDetailNav(id) as NavKey) },
+                            onUserClick = { uId -> backStack.add(PublicProfileNav(uId) as NavKey) },
+                            onCommunityClick = { cId -> backStack.add(CommunityDetailNav(cId) as NavKey) }
                         )
                     }
                     entry<PostDetailNav> { key ->

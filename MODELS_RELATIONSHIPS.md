@@ -1,6 +1,6 @@
 # Data Models & Relationships Architecture
 
-This document breaks down the structural models, fields, architectures, and entity relationships across the **Umphakathi (CrisisReporting)** platform. It maps how core user interactions, community boundaries, crisis escalations, validation tools, and logging streams connect.
+This document breaks down the structural models, fields, architectures, and entity relationships across the **Umphakathi** platform. It maps how core user interactions, community boundaries, crisis escalations, validation tools, and logging streams connect.
 
 ## 📊 UML Class Diagram
 

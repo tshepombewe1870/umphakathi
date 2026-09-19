@@ -1,4 +1,4 @@
-# Umphakathi (CrisisReporting)
+# Umphakathi
 
 **Umphakathi** (meaning "Community") is a mobile-first platform designed to empower citizens and local organizations to report, track, and manage community crises and infrastructure issues. By leveraging collective reporting and real-time collaboration, Umphakathi bridges the gap between community needs and effective responses.
 
@@ -13,15 +13,17 @@
 - **Join Local Communities**: Connect with others in your geographic area or specific organizations.
 - **Corroboration ("Me Too")**: Strengthen reports by adding your own experience to existing incidents, helping authorities prioritize high-impact issues.
 - **Volunteer Matching**: Offer specific resources (Manpower, Transport, Supplies) directly to reports in need of help.
+- **Social Engagement**: Interactive like and comment systems across reports, community posts, and volunteer offers to foster coordination and recognition.
 
 ### 🏛️ Organizational Management
-- **Official Updates**: Verified organizations can post status updates on active incidents.
+- **Official Updates**: Verified organizations can post status updates and chronological notes on active incidents, which automatically sync with the incident timeline.
 - **Community Notice Board**: Post and approve announcements for planned outages, community events, or protests.
 - **Moderation Workflow**: Community owners and moderators can manage notice approvals to ensure feed quality.
 
 ### 🆘 Crisis Management
 - **Crisis Flagging**: Escalate individual reports into broader crises for better visibility and coordination.
-- **Incident Timeline**: Track the history of an issue from submission to resolution.
+- **Incident Timeline**: Track the history of an issue from submission to resolution, including automated audit events for every major action.
+- **Interactive Analytics**: Stat-driven profile cards that allow users to filter report feeds by tapping on metrics like "Resolved" or "Pending".
 
 ## 🛠️ Tech Stack
 
@@ -51,7 +53,7 @@ The project follows Clean Architecture principles and a unidirectional data flow
 ### Setup
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-repo/CrisisReporting.git
+   git clone https://github.com/your-repo/Umphakathi.git
    ```
 2. **Add Firebase**:
    - Place your `google-services.json` in the `app/` directory.
@@ -59,7 +61,13 @@ The project follows Clean Architecture principles and a unidirectional data flow
    - Enable Cloud Firestore and Cloud Storage.
 3. **Build & Run**:
    - Sync the project with Gradle files.
-   - Run the app on an emulator (API 26+) or a physical device.
+   - Run the app on an emulator (API 26+) or a physical device via Android Studio.
+   - You can also use the terminal: `./gradlew installDebug`.
+
+### 📦 Pre-built APK
+If you just want to try the app without setting up the development environment, a pre-built debug APK is available in the project structure at:
+`app/build/outputs/apk/debug/app-debug.apk` 
+*(Note: You can simply install this on any Android device with 'Install from Unknown Sources' enabled).*
 
 ### Development Seeding
 For testing purposes, the app includes a `FirebaseSeeder` that can populate your Firestore instance with sample reports, communities, and notices on the first launch.
@@ -68,7 +76,7 @@ For testing purposes, the app includes a `FirebaseSeeder` that can populate your
 ```text
 app/src/main/java/com/sumsokol/umphakathi/
 ├── data/
-│   ├── firebase/       # Firestore implementations
+│   ├── firebase/       # Firestore implementations & Mappings
 │   ├── mock/           # Mock data for rapid development
 │   └── model/          # Data transfer objects & mapping
 ├── domain/

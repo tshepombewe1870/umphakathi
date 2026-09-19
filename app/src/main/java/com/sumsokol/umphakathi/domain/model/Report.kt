@@ -26,6 +26,7 @@ data class Report(
     val crisisId: String? = null,
     val communityId: String? = null,
     val communityName: String? = null,
+    val isAnonymous: Boolean = false,
     val title: String,
     val description: String,
     val category: ReportCategory,

@@ -27,12 +27,23 @@ fun CommunityDetailScreen(
     communityId: String,
     onBack: () -> Unit,
     onPostClick: (String) -> Unit,
+    onUserClick: (String) -> Unit,
     onCommentClick: (String) -> Unit,
     onImageClick: (List<String>, Int) -> Unit,
     onNewReport: (String) -> Unit,
     viewModel: CommunityDetailViewModel = viewModel(key = communityId, factory = CommunityDetailViewModel.factory(communityId))
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var selectedFilter by remember { mutableStateOf("All") }
+    
+    val filteredPosts = remember(uiState.posts, selectedFilter) {
+        when (selectedFilter) {
+            "Resolved" -> uiState.posts.filter { it.status == PostStatus.RESOLVED }
+            "Active" -> uiState.posts.filter { it.status != PostStatus.RESOLVED }
+            else -> uiState.posts
+        }
+    }
+
     var showVolunteerDialog by remember { mutableStateOf(false) }
     var showCreateNoticeDialog by remember { mutableStateOf(false) }
     val currentUserId = com.sumsokol.umphakathi.data.firebase.FirebaseDataModule.currentUserId
@@ -160,10 +171,12 @@ fun CommunityDetailScreen(
                                 
                                 ProfileStatsRow(
                                     stats = listOf(
-                                        ProfileStatData(uiState.posts.size.toString(), "Reports"),
+                                        ProfileStatData(uiState.posts.size.toString(), "All"),
                                         ProfileStatData(uiState.posts.count { it.status == PostStatus.RESOLVED }.toString(), "Resolved"),
                                         ProfileStatData(uiState.posts.count { it.status != PostStatus.RESOLVED }.toString(), "Active")
-                                    )
+                                    ),
+                                    selectedFilter = selectedFilter,
+                                    onFilterSelect = { selectedFilter = it }
                                 )
                                 
                                 Spacer(Modifier.height(10.dp))
@@ -277,7 +290,7 @@ fun CommunityDetailScreen(
                     }
                 }
 
-                if (uiState.posts.isEmpty()) {
+                if (filteredPosts.isEmpty()) {
                     item {
                         Box(
                             Modifier.fillMaxWidth().padding(32.dp),
@@ -286,13 +299,13 @@ fun CommunityDetailScreen(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(Icons.Default.Forum, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.outline)
                                 Spacer(Modifier.height(8.dp))
-                                Text("No posts yet. Be the first to report an issue!",
+                                Text(if (selectedFilter == "All") "No posts yet. Be the first to report an issue!" else "No $selectedFilter posts found.",
                                     color = MaterialTheme.colorScheme.outline, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                     }
                 } else {
-                    items(uiState.posts) { post ->
+                    items(filteredPosts) { post ->
                         IncidentCard(
                             reportId = post.reportId ?: post.id,
                             title = post.title,
@@ -306,18 +319,22 @@ fun CommunityDetailScreen(
                             commentCount = post.commentCount,
                             volunteerCount = post.volunteerCount,
                             shareCount = 0, // Community posts might not have shares yet in model
+                            authorId = post.authorId,
                             authorName = post.authorName,
+                            communityId = post.communityId,
                             communityName = post.communityName,
+                            isAnonymous = post.isAnonymous,
                             imageUrls = post.imageUrls,
                             onClick = { id -> onPostClick(id) },
-                            onUserClick = { _ -> /* Already in this community view, redirect or noop if userId available */ },
+                            onUserClick = { uId -> onUserClick(uId) },
                             onCommunityClick = { _ -> /* Already on this community detail view */ },
                             onMeToo = { /* Corroborate */ },
                             onComment = { id -> onCommentClick(id) },
                             onVolunteer = { showVolunteerDialog = true },
                             onShare = { viewModel.shareReport(post.reportId ?: post.id) },
                             onHashtagClick = { /* Hashtag functionality */ },
-                            onImageClick = onImageClick
+                            onImageClick = onImageClick,
+                            modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
                 }

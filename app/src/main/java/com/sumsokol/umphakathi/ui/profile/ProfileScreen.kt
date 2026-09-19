@@ -36,9 +36,6 @@ fun ProfileScreen(
         authViewModel.personas.find { it.id == userId }
     }
 
-    val scope = rememberCoroutineScope()
-    var seedingInProgress by remember { mutableStateOf(false) }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -83,28 +80,6 @@ fun ProfileScreen(
                         )
                     }
                     Spacer(Modifier.height(8.dp))
-                    Row(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        OutlinedButton(
-                            onClick = {
-                                seedingInProgress = true
-                                scope.launch {
-                                    FirebaseSeeder.seed(FirebaseDataModule.firestore)
-                                    seedingInProgress = false
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = !seedingInProgress
-                        ) {
-                            if (seedingInProgress) {
-                                CircularProgressIndicator(modifier = Modifier.size(18.dp))
-                            } else {
-                                Icon(Icons.Default.Backup, null, Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Migrate/Seed Data to Firestore")
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(24.dp))
                 }
             }
 

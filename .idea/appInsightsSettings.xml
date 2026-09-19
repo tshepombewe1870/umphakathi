@@ -15,6 +15,14 @@
         <entry key="Firebase Crashlytics">
           <value>
             <InsightsFilterSettings>
+              <option name="connection">
+                <ConnectionSetting>
+                  <option name="appId" value="com.sumsokol.umphakathi" />
+                  <option name="mobileSdkAppId" value="1:85030119924:android:36a56536a4dfe5c95371a1" />
+                  <option name="projectId" value="umphakathi-6a4a7" />
+                  <option name="projectNumber" value="85030119924" />
+                </ConnectionSetting>
+              </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
               <option name="timeIntervalDays" value="THIRTY_DAYS" />
               <option name="visibilityType" value="ALL" />

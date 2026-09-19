@@ -93,6 +93,7 @@ fun ReportWizardScreen(
                 WizardStep.REVIEW -> ReviewStep(
                     draft = uiState.draft,
                     isSubmitting = uiState.isSubmitting,
+                    onToggleAnonymous = viewModel::setAnonymous,
                     onSubmit = viewModel::submitReport
                 )
             }
@@ -320,7 +321,15 @@ fun UrgencyStep(
 }
 
 @Composable
-fun ReviewStep(draft: ReportDraft, isSubmitting: Boolean, onSubmit: () -> Unit) {
+fun ReviewStep(
+    draft: ReportDraft,
+    isSubmitting: Boolean,
+    onToggleAnonymous: (Boolean) -> Unit,
+    onSubmit: () -> Unit
+) {
+    val sensitiveCategories = listOf(ReportCategory.ABUSE, ReportCategory.VIOLENCE, ReportCategory.MISSING_PERSON, ReportCategory.CRIME)
+    val isSensitive = sensitiveCategories.contains(draft.category)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -344,19 +353,64 @@ fun ReviewStep(draft: ReportDraft, isSubmitting: Boolean, onSubmit: () -> Unit) 
         ReviewRow(label = "Potential Harm", value = draft.potentialHarm.name)
 
         Spacer(Modifier.height(8.dp))
+        
+        // Anonymous Toggle
         Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            colors = CardDefaults.cardColors(
+                containerColor = if (draft.isAnonymous) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant
+            ),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Lock, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "Your username and personal information are protected. You will not be automatically identified to responding departments.",
-                    style = MaterialTheme.typography.bodySmall
+            Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    if (draft.isAnonymous) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    null,
+                    Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Report Anonymously", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Text(
+                        if (isSensitive) "Highly recommended for this category. Your identity will be hidden from everyone."
+                        else "Hide your identity from other users and organizations.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Switch(
+                    checked = draft.isAnonymous,
+                    onCheckedChange = onToggleAnonymous
                 )
             }
         }
+
+        if (draft.category != null) {
+            Spacer(Modifier.height(8.dp))
+            Text("Clear Next Steps", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text("Even before you submit, consider taking these actions:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            
+            getNextStepsForCategory(draft.category).forEach { step ->
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(step.title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                            Text(step.description, style = MaterialTheme.typography.bodySmall)
+                        }
+                        step.hotline?.let {
+                            IconButton(onClick = { /* Call hotline */ }) {
+                                Icon(Icons.Default.Phone, "Call", tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
         Button(
             onClick = onSubmit,
             modifier = Modifier.fillMaxWidth(),

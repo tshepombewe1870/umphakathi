@@ -28,25 +28,39 @@ fun PublicProfileScreen(
     searchQuery: String,
     onBack: () -> Unit,
     onReportClick: (String) -> Unit,
+    onUserClick: (String) -> Unit,
+    onCommunityClick: (String) -> Unit,
     onCommentClick: (String) -> Unit,
     onImageClick: (List<String>, Int) -> Unit,
     reportsViewModel: ReportsViewModel = viewModel()
 ) {
     val uiState by reportsViewModel.uiState.collectAsStateWithLifecycle()
+    var selectedFilter by remember { mutableStateOf("All") }
     
-    // Filter by user AND search query
-    val userReports = remember(uiState.reports, userId, searchQuery) {
+    // Filter by user AND search query AND interactive metric tab
+    val userReports = remember(uiState.reports, userId, searchQuery, selectedFilter) {
         uiState.reports.filter { 
-            (it.reporterId == userId || it.reporterName.contains(userId, ignoreCase = true)) &&
-            (searchQuery.isBlank() || 
-             it.title.contains(searchQuery, ignoreCase = true) || 
-             it.description.contains(searchQuery, ignoreCase = true))
+            val matchesUser = (it.reporterId == userId || it.reporterName.contains(userId, ignoreCase = true))
+            val matchesSearch = (searchQuery.isBlank() || 
+                                it.title.contains(searchQuery, ignoreCase = true) || 
+                                it.description.contains(searchQuery, ignoreCase = true))
+            val matchesFilter = when (selectedFilter) {
+                "Resolved" -> it.status == ReportStatus.RESOLVED
+                "Pending" -> it.status != ReportStatus.RESOLVED
+                else -> true
+            }
+            matchesUser && matchesSearch && matchesFilter
         }
     }
 
-    val totalReports = userReports.size
-    val resolvedReports = userReports.count { it.status == ReportStatus.RESOLVED }
-    val pendingReports = totalReports - resolvedReports
+    // Get true count independent of active filter view
+    val totalCount = remember(uiState.reports, userId) {
+        uiState.reports.count { it.reporterId == userId || it.reporterName.contains(userId, ignoreCase = true) }
+    }
+    val resolvedCount = remember(uiState.reports, userId) {
+        uiState.reports.count { (it.reporterId == userId || it.reporterName.contains(userId, ignoreCase = true)) && it.status == ReportStatus.RESOLVED }
+    }
+    val pendingCount = totalCount - resolvedCount
 
     Scaffold(
         topBar = {
@@ -62,25 +76,29 @@ fun PublicProfileScreen(
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = paddingValues.calculateTopPadding() + 4.dp, bottom = paddingValues.calculateBottomPadding() + 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(top = paddingValues.calculateTopPadding() + 4.dp, bottom = paddingValues.calculateBottomPadding() + 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                ProfileCard {
-                    ProfileHeader(
-                        name = if (userReports.isNotEmpty()) userReports.first().reporterName else "User $userId",
-                        handle = "@reporter",
-                        badgeText = "Verified Community Reporter"
-                    )
-                    
-                    ProfileStatsRow(
-                        stats = listOf(
-                            ProfileStatData(totalReports.toString(), "Total Reports"),
-                            ProfileStatData(resolvedReports.toString(), "Resolved"),
-                            ProfileStatData(pendingReports.toString(), "Pending")
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    ProfileCard {
+                        ProfileHeader(
+                            name = if (userReports.isNotEmpty()) userReports.first().reporterName else "User $userId",
+                            handle = "@reporter",
+                            badgeText = "Verified Community Reporter"
                         )
-                    )
-                    Spacer(Modifier.height(24.dp))
+                        
+                        ProfileStatsRow(
+                            stats = listOf(
+                                ProfileStatData(totalCount.toString(), "All"),
+                                ProfileStatData(resolvedCount.toString(), "Resolved"),
+                                ProfileStatData(pendingCount.toString(), "Pending")
+                            ),
+                            selectedFilter = selectedFilter,
+                            onFilterSelect = { selectedFilter = it }
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
                 }
             }
 
@@ -89,17 +107,18 @@ fun PublicProfileScreen(
                     text = "Report Activity",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
 
             if (userReports.isEmpty()) {
                 item {
                     Box(
-                        modifier = Modifier.fillMaxWidth().padding(32.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No reports made by this user yet.", color = MaterialTheme.colorScheme.outline)
+                        Text(if (selectedFilter == "All") "No reports made by this user yet." else "No $selectedFilter reports found.",
+                            color = MaterialTheme.colorScheme.outline)
                     }
                 }
             } else {
@@ -117,17 +136,21 @@ fun PublicProfileScreen(
                         commentCount = report.commentCount,
                         volunteerCount = report.volunteerCount,
                         shareCount = report.shareCount,
+                        authorId = report.reporterId,
                         authorName = report.reporterName,
+                        communityId = report.communityId,
                         communityName = report.communityName,
+                        isAnonymous = report.isAnonymous,
                         imageUrls = report.imageUrls,
                         onClick = { onReportClick(report.id) },
-                        onUserClick = { },
-                        onCommunityClick = { },
+                        onUserClick = { uId -> onUserClick(uId) },
+                        onCommunityClick = { cId -> onCommunityClick(cId) },
                         onMeToo = { reportsViewModel.addMeToo(report.id) },
                         onComment = { id -> onCommentClick(id) },
                         onShare = { reportsViewModel.shareReport(report.id) },
                         onHashtagClick = { /* Hashtag functionality */ },
-                        onImageClick = onImageClick
+                        onImageClick = onImageClick,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
             }

@@ -101,18 +101,22 @@ fun ReportsScreen(
                             commentCount = report.commentCount,
                             volunteerCount = report.volunteerCount,
                             shareCount = report.shareCount,
+                            authorId = report.reporterId,
                             authorName = report.reporterName,
+                            communityId = report.communityId,
                             communityName = report.communityName,
+                            isAnonymous = report.isAnonymous,
                             imageUrls = report.imageUrls,
                             onClick = { id -> onReportClick(id) },
-                            onUserClick = { _ -> onUserClick(report.reporterId) },
-                            onCommunityClick = { _ -> report.communityId?.let { cId -> onReportClick("COMM_ID:$cId") } }, // Signal community navigate
+                            onUserClick = { uId -> onUserClick(uId) },
+                            onCommunityClick = { cId -> onReportClick("COMM_ID:$cId") }, // Signal community navigate
                             onMeToo = { viewModel.addMeToo(report.id) },
                             onComment = { id -> onCommentClick(id) },
                             onVolunteer = { onVolunteerClick(report.id) },
                             onShare = { viewModel.shareReport(report.id) },
                             onHashtagClick = { /* Hashtag functionality */ },
-                            onImageClick = onImageClick
+                            onImageClick = onImageClick,
+                            modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
                 } else if (searchQuery.isNotEmpty()) {

@@ -24,6 +24,8 @@ fun OrganizationDetailScreen(
     organizationId: String,
     onBack: () -> Unit,
     onReportClick: (String) -> Unit,
+    onUserClick: (String) -> Unit,
+    onCommunityClick: (String) -> Unit,
     viewModel: OrganizationDetailViewModel = viewModel(key = organizationId, factory = OrganizationDetailViewModel.factory(organizationId))
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -61,10 +63,15 @@ fun OrganizationDetailScreen(
                                 
                                 ProfileStatsRow(
                                     stats = listOf(
-                                        ProfileStatData(uiState.reports.size.toString(), "Assigned"),
-                                        ProfileStatData(uiState.reports.count { it.status == ReportStatus.RESOLVED }.toString(), "Resolved"),
-                                        ProfileStatData(uiState.reports.count { it.status != ReportStatus.RESOLVED }.toString(), "Active")
-                                    )
+                                        ProfileStatData(uiState.allCount.toString(), "All"),
+                                        ProfileStatData(uiState.assignedCount.toString(), "Assigned"),
+                                        ProfileStatData(uiState.resolvedCount.toString(), "Resolved"),
+                                        ProfileStatData(uiState.activeCount.toString(), "Active")
+                                    ),
+                                    selectedFilter = uiState.selectedFilter,
+                                    onFilterSelect = { filterLabel ->
+                                        viewModel.setFilter(filterLabel)
+                                    }
                                 )
                                 Spacer(Modifier.height(8.dp))
                             }
@@ -138,18 +145,22 @@ fun OrganizationDetailScreen(
                             commentCount = report.commentCount,
                             volunteerCount = report.volunteerCount,
                             shareCount = report.shareCount,
+                            authorId = report.reporterId,
                             authorName = report.reporterName,
+                            communityId = report.communityId,
                             communityName = report.communityName,
+                            isAnonymous = report.isAnonymous,
                             imageUrls = report.imageUrls,
                             onClick = { id -> onReportClick(id) },
-                            onUserClick = { },
-                            onCommunityClick = { },
+                            onUserClick = { uId -> onUserClick(uId) },
+                            onCommunityClick = { cId -> onCommunityClick(cId) },
                             onMeToo = { },
                             onComment = { id -> onReportClick(id) },
                             onVolunteer = { },
                             onShare = { },
                             onHashtagClick = { },
-                            onImageClick = { _, _ -> }
+                            onImageClick = { _, _ -> },
+                            modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
                 }

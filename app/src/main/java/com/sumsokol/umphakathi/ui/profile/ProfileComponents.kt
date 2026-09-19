@@ -3,12 +3,12 @@ package com.sumsokol.umphakathi.ui.profile
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,14 +50,45 @@ fun ProfileHeader(
 
 @Composable
 fun ProfileStatsRow(
-    stats: List<ProfileStatData>
+    stats: List<ProfileStatData>,
+    selectedFilter: String = "All",
+    onFilterSelect: ((String) -> Unit)? = null
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         stats.forEach { stat ->
-            ProfileStatItem(value = stat.value, label = stat.label)
+            val isSelected = selectedFilter == stat.label
+            Surface(
+                onClick = { onFilterSelect?.invoke(stat.label) },
+                enabled = onFilterSelect != null,
+                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 2.dp, vertical = 4.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(vertical = 12.dp)
+                ) {
+                    Text(
+                        text = stat.value,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stat.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    )
+                }
+            }
         }
     }
 }
@@ -66,14 +97,6 @@ data class ProfileStatData(
     val value: String,
     val label: String
 )
-
-@Composable
-fun ProfileStatItem(value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-    }
-}
 
 @Composable
 fun ProfileCard(
@@ -130,8 +153,8 @@ fun ActionButton(
     icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary,
-    contentColor: androidx.compose.ui.graphics.Color = contentColorFor(containerColor)
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = contentColorFor(containerColor)
 ) {
     Button(
         onClick = onClick,
@@ -152,7 +175,7 @@ fun SettingRowItem(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit = {},
-    tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface
+    tint: Color = MaterialTheme.colorScheme.onSurface
 ) {
     Row(
         modifier = Modifier

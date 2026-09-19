@@ -39,7 +39,7 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(48.dp))
             
             Text(
-                text = "CrisisReporting",
+                text = "Umphakathi",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary

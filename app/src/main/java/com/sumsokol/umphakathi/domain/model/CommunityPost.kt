@@ -10,6 +10,7 @@ data class CommunityPost(
     val authorId: String,
     val authorName: String = "Anonymous",
     val communityName: String? = null,
+    val isAnonymous: Boolean = false,
     val reportId: String? = null,
     val crisisId: String? = null,
     val title: String,
