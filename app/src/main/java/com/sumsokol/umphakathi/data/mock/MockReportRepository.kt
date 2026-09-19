@@ -24,6 +24,9 @@ class MockReportRepository : ReportRepository {
     override fun getReportsByStatus(status: ReportStatus): Flow<List<Report>> =
         _reports.map { list -> list.filter { it.status == status } }
 
+    override fun getReportsForCommunity(communityId: String): Flow<List<Report>> =
+        _reports.map { list -> list.filter { it.communityId == communityId } }
+
     override suspend fun submitReport(report: Report): Result<Report> {
         val newReport = report.copy(id = UUID.randomUUID().toString(), submittedAt = Instant.now())
         _reports.value = _reports.value + newReport

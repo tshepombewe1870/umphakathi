@@ -70,6 +70,22 @@ class FirestoreReportRepository(private val db: FirebaseFirestore) : ReportRepos
         awaitClose { subscription.remove() }
     }
 
+    override fun getReportsForCommunity(communityId: String): Flow<List<Report>> = callbackFlow {
+        val subscription = db.collection("reports")
+            .whereEqualTo("communityId", communityId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    android.util.Log.e("FirestoreReportRepo", "Error fetching reports for community $communityId: ${error.message}")
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    trySend(snapshot.documents.mapNotNull { it.toReport() })
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
     override suspend fun submitReport(report: Report): Result<Report> = runCatching {
         val docRef = db.collection("reports").document()
         val reportWithId = report.copy(id = docRef.id)

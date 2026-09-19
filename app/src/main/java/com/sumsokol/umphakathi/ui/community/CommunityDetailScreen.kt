@@ -143,73 +143,81 @@ fun CommunityDetailScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = paddingValues.calculateTopPadding() + 16.dp, bottom = paddingValues.calculateBottomPadding() + 16.dp),
+                contentPadding = PaddingValues(top = paddingValues.calculateTopPadding(), bottom = paddingValues.calculateBottomPadding()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Community info header (reusing profile components)
                 uiState.community?.let { community ->
                     item {
-                        ProfileCard {
-                            ProfileHeader(
-                                name = community.name,
-                                handle = community.location ?: "Local Community",
-                                badgeText = "${community.memberCount} members",
-                                badgeIcon = Icons.Default.Groups
-                            )
-                            
-                            ProfileStatsRow(
-                                stats = listOf(
-                                    ProfileStatData(uiState.posts.size.toString(), "Reports"),
-                                    ProfileStatData(uiState.posts.count { it.status == PostStatus.RESOLVED }.toString(), "Resolved"),
-                                    ProfileStatData(uiState.posts.count { it.status != PostStatus.RESOLVED }.toString(), "Active")
+                        Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
+                            ProfileCard {
+                                ProfileHeader(
+                                    name = community.name,
+                                    handle = community.location ?: "Local Community",
+                                    badgeText = "${community.memberCount} members",
+                                    badgeIcon = Icons.Default.Groups
                                 )
-                            )
-                            
-                            Spacer(Modifier.height(16.dp))
-                            
-                            Row(modifier = Modifier.padding(horizontal = 16.dp)) {
-                                ActionButton(
-                                    text = if (uiState.isMember) "Joined" else "Join Community",
-                                    icon = if (uiState.isMember) Icons.Default.Check else Icons.Default.PersonAdd,
-                                    onClick = { 
-                                        if (uiState.isMember) viewModel.leaveCommunity() else viewModel.joinCommunity()
-                                    },
-                                    containerColor = if (uiState.isMember) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primary,
-                                    contentColor = if (uiState.isMember) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.weight(1f)
+                                
+                                ProfileStatsRow(
+                                    stats = listOf(
+                                        ProfileStatData(uiState.posts.size.toString(), "Reports"),
+                                        ProfileStatData(uiState.posts.count { it.status == PostStatus.RESOLVED }.toString(), "Resolved"),
+                                        ProfileStatData(uiState.posts.count { it.status != PostStatus.RESOLVED }.toString(), "Active")
+                                    )
                                 )
-                                Spacer(Modifier.width(8.dp))
-                                ActionButton(
-                                    text = "Share",
-                                    icon = Icons.Default.Share,
-                                    onClick = { /* Share */ },
-                                    containerColor = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.weight(1f)
-                                )
+                                
+                                Spacer(Modifier.height(16.dp))
+                                
+                                Row(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                    ActionButton(
+                                        text = if (uiState.isMember) "Joined" else "Join Community",
+                                        icon = if (uiState.isMember) Icons.Default.Check else Icons.Default.PersonAdd,
+                                        onClick = { 
+                                            if (uiState.isMember) viewModel.leaveCommunity() else viewModel.joinCommunity()
+                                        },
+                                        containerColor = if (uiState.isMember) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primary,
+                                        contentColor = if (uiState.isMember) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    ActionButton(
+                                        text = "Share",
+                                        icon = Icons.Default.Share,
+                                        onClick = { /* Share */ },
+                                        containerColor = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                Spacer(Modifier.height(24.dp))
                             }
-                            Spacer(Modifier.height(24.dp))
                         }
                     }
 
                     item {
-                        ProfileBio(bio = community.description)
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            ProfileBio(bio = community.description)
+                        }
                     }
 
                     community.location?.let {
                         item {
-                            CommunityLocationCard(location = it)
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                CommunityLocationCard(location = it)
+                            }
                         }
                     }
 
                     item {
-                        CommunityRulesCard(
-                            rules = listOf(
-                                "Be respectful to other community members.",
-                                "Only report verified local incidents.",
-                                "Do not spam the feed with unrelated content.",
-                                "Protect the privacy of individuals in reports."
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            CommunityRulesCard(
+                                rules = listOf(
+                                    "Be respectful to other community members.",
+                                    "Only report verified local incidents.",
+                                    "Do not spam the feed with unrelated content.",
+                                    "Protect the privacy of individuals in reports."
+                                )
                             )
-                        )
+                        }
                     }
                 }
 
@@ -227,15 +235,17 @@ fun CommunityDetailScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(top = 8.dp)
+                            modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
                         )
                     }
                     items(pendingNotices) { notice ->
-                        NoticeCard(
-                            notice = notice,
-                            onApprove = { viewModel.approveNotice(notice.id) },
-                            onReject = { viewModel.rejectNotice(notice.id) }
-                        )
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            NoticeCard(
+                                notice = notice,
+                                onApprove = { viewModel.approveNotice(notice.id) },
+                                onReject = { viewModel.rejectNotice(notice.id) }
+                            )
+                        }
                     }
                 }
 
@@ -246,11 +256,13 @@ fun CommunityDetailScreen(
                             text = "Notice Board & Announcements",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp)
+                            modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
                         )
                     }
                     items(approvedNotices) { notice ->
-                        NoticeCard(notice = notice)
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            NoticeCard(notice = notice)
+                        }
                     }
                 }
 
@@ -260,7 +272,7 @@ fun CommunityDetailScreen(
                             text = "Community Reports",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp)
+                            modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
                         )
                     }
                 }

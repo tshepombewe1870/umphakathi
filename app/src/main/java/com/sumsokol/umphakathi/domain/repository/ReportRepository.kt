@@ -9,6 +9,7 @@ interface ReportRepository {
     fun getReport(id: String): Flow<Report?>
     fun getReportsByCrisis(crisisId: String): Flow<List<Report>>
     fun getReportsByStatus(status: ReportStatus): Flow<List<Report>>
+    fun getReportsForCommunity(communityId: String): Flow<List<Report>>
     suspend fun submitReport(report: Report): Result<Report>
     suspend fun updateReport(report: Report): Result<Report>
     suspend fun addMeToo(reportId: String, userId: String, description: String?): Result<Unit>

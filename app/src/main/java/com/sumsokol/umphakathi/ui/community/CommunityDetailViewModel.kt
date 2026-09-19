@@ -15,6 +15,8 @@ import kotlinx.coroutines.launch
 import com.sumsokol.umphakathi.domain.model.Notice
 import com.sumsokol.umphakathi.domain.model.NoticeType
 import com.sumsokol.umphakathi.domain.model.NoticeStatus
+import com.sumsokol.umphakathi.domain.model.PostStatus
+import com.sumsokol.umphakathi.domain.model.ReportStatus
 
 data class CommunityDetailUiState(
     val community: Community? = null,
@@ -98,12 +100,36 @@ class CommunityDetailViewModel(private val communityId: String) : ViewModel() {
             combine(
                 communityRepository.getCommunity(communityId),
                 communityRepository.getPostsForCommunity(communityId),
+                reportRepository.getReportsForCommunity(communityId),
                 communityRepository.getNoticesForCommunity(communityId),
                 communityRepository.isUserMember(communityId, userId)
-            ) { community, posts, notices, isMember ->
+            ) { community, posts, reports, notices, isMember ->
+                val existingReportIds = posts.mapNotNull { it.reportId }.toSet()
+                val extraPostsFromReports = reports.filter { it.id !in existingReportIds }.map { report ->
+                    CommunityPost(
+                        id = report.id,
+                        communityId = report.communityId ?: communityId,
+                        authorId = report.reporterId,
+                        authorName = report.reporterName,
+                        communityName = report.communityName,
+                        reportId = report.id,
+                        crisisId = report.crisisId,
+                        title = report.title,
+                        body = report.description,
+                        category = report.category,
+                        urgency = report.urgency,
+                        status = if (report.status == ReportStatus.RESOLVED) PostStatus.RESOLVED else PostStatus.ACTIVE,
+                        commentCount = report.commentCount,
+                        meTooCount = report.meTooCount,
+                        volunteerCount = report.volunteerCount,
+                        imageUrls = report.imageUrls,
+                        createdAt = report.submittedAt,
+                        updatedAt = report.updatedAt
+                    )
+                }
                 CommunityDetailUiState(
                     community = community,
-                    posts = posts.sortedByDescending { it.createdAt },
+                    posts = (posts + extraPostsFromReports).sortedByDescending { it.createdAt },
                     notices = notices.sortedByDescending { it.createdAt },
                     isMember = isMember,
                     isLoading = false
