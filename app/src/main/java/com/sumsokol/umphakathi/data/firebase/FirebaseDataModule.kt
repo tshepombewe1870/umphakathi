@@ -6,6 +6,7 @@ import com.sumsokol.umphakathi.domain.repository.CommunityRepository
 import com.sumsokol.umphakathi.domain.repository.CrisisRepository
 import com.sumsokol.umphakathi.domain.repository.ReportRepository
 import com.sumsokol.umphakathi.domain.repository.VolunteerRepository
+import com.sumsokol.umphakathi.domain.repository.OrganizationRepository
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -31,4 +32,5 @@ object FirebaseDataModule {
     val communityRepository: CommunityRepository by lazy { FirestoreCommunityRepository(firestore) }
     val volunteerRepository: VolunteerRepository by lazy { FirestoreVolunteerRepository(firestore) }
     val userRepository: FirestoreUserRepository by lazy { FirestoreUserRepository(firestore) }
+    val organizationRepository: OrganizationRepository by lazy { FirestoreOrganizationRepository(firestore) }
 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -24,6 +25,8 @@ import com.sumsokol.umphakathi.ui.components.GlobalTopAppBar
 import com.sumsokol.umphakathi.ui.community.CommunityScreen
 import com.sumsokol.umphakathi.ui.community.CommunityDetailScreen
 import com.sumsokol.umphakathi.ui.community.PostDetailScreen
+import com.sumsokol.umphakathi.ui.organization.OrganizationScreen
+import com.sumsokol.umphakathi.ui.organization.OrganizationDetailScreen
 import com.sumsokol.umphakathi.ui.crisis.CrisisDetailScreen
 import com.sumsokol.umphakathi.ui.profile.ProfileScreen
 import com.sumsokol.umphakathi.ui.profile.PublicProfileScreen
@@ -123,13 +126,13 @@ fun MainNavigation() {
                         label = { Text("Community") }
                     )
                     NavigationBarItem(
-                        selected = selectedTab is ReportNav,
+                        selected = selectedTab is OrganizationNav,
                         onClick = {
-                            selectedTab = ReportNav
-                            backStack.add(ReportWizardNav() as NavKey)
+                            selectedTab = OrganizationNav
+                            backStack.add(OrganizationNav as NavKey)
                         },
-                        icon = { Icon(Icons.Default.AddCircle, contentDescription = "Report") },
-                        label = { Text("Report") }
+                        icon = { Icon(Icons.Default.Business, contentDescription = "Organizations") },
+                        label = { Text("Organizations") }
                     )
                     NavigationBarItem(
                         selected = selectedTab is AccountNav,
@@ -167,6 +170,12 @@ fun MainNavigation() {
                             searchQuery = globalSearchQuery,
                             onCommunityClick = { id -> backStack.add(CommunityDetailNav(id) as NavKey) },
                             onNewReport = { cId -> backStack.add(ReportWizardNav(cId) as NavKey) }
+                        )
+                    }
+                    entry<OrganizationNav> {
+                        OrganizationScreen(
+                            searchQuery = globalSearchQuery,
+                            onOrganizationClick = { id -> backStack.add(OrganizationDetailNav(id) as NavKey) }
                         )
                     }
                     entry<ReportWizardNav> { key ->
@@ -215,6 +224,13 @@ fun MainNavigation() {
                             onCommentClick = { id -> activeCommentsReportId = id },
                             onImageClick = { urls, index -> backStack.add(ImageSlideshowNav(urls, index) as NavKey) },
                             onNewReport = { cId -> backStack.add(ReportWizardNav(cId) as NavKey) }
+                        )
+                    }
+                    entry<OrganizationDetailNav> { key ->
+                        OrganizationDetailScreen(
+                            organizationId = key.organizationId,
+                            onBack = { backStack.removeLastOrNull() },
+                            onReportClick = { id -> backStack.add(ReportDetailNav(id) as NavKey) }
                         )
                     }
                     entry<PostDetailNav> { key ->

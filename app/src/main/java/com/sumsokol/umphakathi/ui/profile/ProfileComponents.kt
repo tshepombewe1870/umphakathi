@@ -22,7 +22,7 @@ fun ProfileHeader(
 ) {
     Column(
         modifier = Modifier
-            .padding(24.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 16.dp)
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

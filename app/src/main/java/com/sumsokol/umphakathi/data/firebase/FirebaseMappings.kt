@@ -439,3 +439,16 @@ internal fun com.google.firebase.firestore.DocumentSnapshot.toNotice(): Notice? 
         updatedAt = getTimestamp("updatedAt")?.toDate()?.toInstant() ?: java.time.Instant.now()
     )
 } catch (e: Exception) { null }
+
+internal fun com.google.firebase.firestore.DocumentSnapshot.toOrganization(): Organization? = try {
+    Organization(
+        id = getString("id") ?: id,
+        accountUserId = getString("accountUserId") ?: "",
+        name = getString("name") ?: "",
+        organizationType = OrganizationType.valueOf(getString("organizationType") ?: "OTHER"),
+        verified = getBoolean("verified") ?: false,
+        description = getString("description"),
+        serviceAreas = (get("serviceAreas") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+        createdAt = getTimestamp("createdAt")?.toDate()?.toInstant() ?: java.time.Instant.now()
+    )
+} catch (e: Exception) { null }
