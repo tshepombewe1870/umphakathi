@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.crisisreporting.ui.main.MainScreenViewModelTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-16T11:47:49.445Z" hostname="tshepos-Mac-mini.local" time="0.007">
+  <properties/>
+  <testcase name="uiState_initiallyLoading" classname="com.example.crisisreporting.ui.main.MainScreenViewModelTest" time="0.006"/>
+  <testcase name="uiState_onItemSaved_isDisplayed" classname="com.example.crisisreporting.ui.main.MainScreenViewModelTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
