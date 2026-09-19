@@ -22,17 +22,17 @@ fun ProfileHeader(
 ) {
     Column(
         modifier = Modifier
-            .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 16.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 8.dp)
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             Icons.Default.AccountCircle,
             null,
-            Modifier.size(80.dp),
+            Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.primary
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
             text = name,
             style = MaterialTheme.typography.titleLarge,

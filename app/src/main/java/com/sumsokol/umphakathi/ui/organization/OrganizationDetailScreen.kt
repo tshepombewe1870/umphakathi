@@ -50,7 +50,7 @@ fun OrganizationDetailScreen(
             ) {
                 uiState.organization?.let { org ->
                     item {
-                        Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
+                        Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp)) {
                             ProfileCard {
                                 ProfileHeader(
                                     name = org.name,
@@ -66,7 +66,7 @@ fun OrganizationDetailScreen(
                                         ProfileStatData(uiState.reports.count { it.status != ReportStatus.RESOLVED }.toString(), "Active")
                                     )
                                 )
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(8.dp))
                             }
                         }
                     }
@@ -142,6 +142,8 @@ fun OrganizationDetailScreen(
                             communityName = report.communityName,
                             imageUrls = report.imageUrls,
                             onClick = { id -> onReportClick(id) },
+                            onUserClick = { },
+                            onCommunityClick = { },
                             onMeToo = { },
                             onComment = { id -> onReportClick(id) },
                             onVolunteer = { },

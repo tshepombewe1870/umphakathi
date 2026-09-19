@@ -155,7 +155,13 @@ fun MainNavigation() {
                     entry<HomeNav> {
                         ReportsScreen(
                             searchQuery = globalSearchQuery,
-                            onReportClick = { id -> backStack.add(ReportDetailNav(id) as NavKey) },
+                            onReportClick = { id -> 
+                                if (id.startsWith("COMM_ID:")) {
+                                    backStack.add(CommunityDetailNav(id.removePrefix("COMM_ID:")) as NavKey)
+                                } else {
+                                    backStack.add(ReportDetailNav(id) as NavKey)
+                                }
+                            },
                             onCrisisClick = { id -> backStack.add(CrisisDetailNav(id) as NavKey) },
                             onUserClick = { uId -> backStack.add(PublicProfileNav(uId) as NavKey) },
                             onCommentClick = { id -> activeCommentsReportId = id },

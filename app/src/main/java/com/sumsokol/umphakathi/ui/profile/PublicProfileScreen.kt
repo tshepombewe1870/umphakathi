@@ -121,6 +121,8 @@ fun PublicProfileScreen(
                         communityName = report.communityName,
                         imageUrls = report.imageUrls,
                         onClick = { onReportClick(report.id) },
+                        onUserClick = { },
+                        onCommunityClick = { },
                         onMeToo = { reportsViewModel.addMeToo(report.id) },
                         onComment = { id -> onCommentClick(id) },
                         onShare = { reportsViewModel.shareReport(report.id) },

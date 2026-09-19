@@ -45,6 +45,8 @@ fun IncidentCard(
     communityName: String? = null,
     imageUrls: List<String> = emptyList(),
     onClick: (String) -> Unit,
+    onUserClick: ((String) -> Unit)? = null,
+    onCommunityClick: ((String) -> Unit)? = null,
     onMeToo: () -> Unit,
     onComment: (String) -> Unit = {},
     onVolunteer: () -> Unit = {},
@@ -76,7 +78,7 @@ fun IncidentCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
-                    onClick = { onClick(authorName) },
+                    onClick = { onUserClick?.invoke("authorId") ?: onClick(authorName) },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
@@ -88,20 +90,20 @@ fun IncidentCard(
                 }
                 Spacer(Modifier.width(8.dp))
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onClick(authorName) }
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = authorName,
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onUserClick?.invoke("authorId") ?: onClick(authorName) }
                     )
                     if (!communityName.isNullOrBlank()) {
                         Text(
                             text = communityName,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.clickable { onCommunityClick?.invoke("communityId") ?: onClick(communityName) }
                         )
                     }
                 }

@@ -149,7 +149,7 @@ fun CommunityDetailScreen(
                 // Community info header (reusing profile components)
                 uiState.community?.let { community ->
                     item {
-                        Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
+                        Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp)) {
                             ProfileCard {
                                 ProfileHeader(
                                     name = community.name,
@@ -166,7 +166,7 @@ fun CommunityDetailScreen(
                                     )
                                 )
                                 
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(10.dp))
                                 
                                 Row(modifier = Modifier.padding(horizontal = 16.dp)) {
                                     ActionButton(
@@ -188,7 +188,7 @@ fun CommunityDetailScreen(
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
-                                Spacer(Modifier.height(24.dp))
+                                Spacer(Modifier.height(12.dp))
                             }
                         }
                     }
@@ -310,6 +310,8 @@ fun CommunityDetailScreen(
                             communityName = post.communityName,
                             imageUrls = post.imageUrls,
                             onClick = { id -> onPostClick(id) },
+                            onUserClick = { _ -> /* Already in this community view, redirect or noop if userId available */ },
+                            onCommunityClick = { _ -> /* Already on this community detail view */ },
                             onMeToo = { /* Corroborate */ },
                             onComment = { id -> onCommentClick(id) },
                             onVolunteer = { showVolunteerDialog = true },

@@ -72,7 +72,7 @@ fun ProfileScreen(
                         badgeText = "$role • $community"
                     )
                     
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(4.dp))
                     
                     Row(modifier = Modifier.padding(horizontal = 16.dp)) {
                         ActionButton(
@@ -82,7 +82,7 @@ fun ProfileScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(8.dp))
                     Row(modifier = Modifier.padding(horizontal = 16.dp)) {
                         OutlinedButton(
                             onClick = {

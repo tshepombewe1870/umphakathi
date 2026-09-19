@@ -182,6 +182,8 @@ fun CrisisDetailScreen(
                                 communityName = report.communityName,
                                 imageUrls = report.imageUrls,
                                 onClick = { /* Navigate to report detail */ },
+                                onUserClick = { },
+                                onCommunityClick = { },
                                 onMeToo = { /* Corroborate */ }
                             )
                         }

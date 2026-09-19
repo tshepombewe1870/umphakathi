@@ -104,13 +104,9 @@ fun ReportsScreen(
                             authorName = report.reporterName,
                             communityName = report.communityName,
                             imageUrls = report.imageUrls,
-                            onClick = { value -> 
-                                if (value == report.reporterName) {
-                                    onUserClick(report.reporterId)
-                                } else {
-                                    onReportClick(value)
-                                }
-                            },
+                            onClick = { id -> onReportClick(id) },
+                            onUserClick = { _ -> onUserClick(report.reporterId) },
+                            onCommunityClick = { _ -> report.communityId?.let { cId -> onReportClick("COMM_ID:$cId") } }, // Signal community navigate
                             onMeToo = { viewModel.addMeToo(report.id) },
                             onComment = { id -> onCommentClick(id) },
                             onVolunteer = { onVolunteerClick(report.id) },
